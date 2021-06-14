@@ -1,7 +1,9 @@
 import argparse
 import json
 from urllib.request import urlopen
+
 import bs4
+
 from get_book import scrape_book
 
 RATING_STARS_DICT = {'it was amazing': 5,
@@ -68,7 +70,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--user_id', type=str)
     args = parser.parse_args()
-    
+
     scrape_user(args.user_id)
 
 

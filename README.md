@@ -1,1 +1,1 @@
-# goodreads-scraper
+# Goodreads User Scraper
