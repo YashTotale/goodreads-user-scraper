@@ -4,7 +4,7 @@ from urllib.request import urlopen
 
 import bs4
 
-from get_book import scrape_book
+from scraper import scrape_book
 
 RATING_STARS_DICT = {'it was amazing': 5,
                      'really liked it': 4,
@@ -57,7 +57,7 @@ def scrape_user(user_id):
 
         for book_row in book_rows:
             book_id = get_id(book_row)
-            book = scrape_book(book_id)
+            book = scrape_book.scrape_book(book_id)
             book['rating'] = get_rating(book_row)
             book['dates_read'] = get_dates_read(book_row)
             json.dump(book, open('books/read/' + book.get('book_id_title') + '.json', 'w'), indent=2)
