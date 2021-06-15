@@ -7,3 +7,5 @@ python3 setup.py sdist bdist_wheel
 twine check dist/*
 bumpversion $version_type
 twine upload dist/*
+git push
+git push --follow-tags
