@@ -1,6 +1,5 @@
 venv
 books
-.idea
 build
 dist
 __pycache__
