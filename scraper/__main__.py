@@ -1,7 +1,7 @@
 import argparse
 import json
 from urllib.request import urlopen
-
+import os
 import bs4
 
 from scraper import scrape_book
@@ -16,8 +16,8 @@ RATING_STARS_DICT = {
 }
 
 
-def create_url(user_id, shelf, page):
-    return (
+def get_shelf(user_id, shelf, page):
+    url = (
         "https://www.goodreads.com/review/list/"
         + user_id
         + "?shelf="
@@ -26,6 +26,8 @@ def create_url(user_id, shelf, page):
         + str(page)
         + "&print=true"
     )
+    source = urlopen(url)
+    return bs4.BeautifulSoup(source, "html.parser")
 
 
 def get_id(book_row):
@@ -53,15 +55,15 @@ def get_dates_read(book_row):
     return date_arr
 
 
-def scrape_user(args):
+def get_read_books(args):
     user_id = args.user_id
-    output_dir = args.output_dir
+    output_dir = args.output_dir + "read/"
     page = 1
 
+    os.mkdir(output_dir)
+
     while True:
-        url = create_url(user_id, "read", page)
-        source = urlopen(url)
-        soup = bs4.BeautifulSoup(source, "html.parser")
+        soup = get_shelf(user_id, "read", page)
 
         no_content = soup.find("div", {"class": "greyText nocontent stacked"})
         if no_content:
@@ -75,20 +77,17 @@ def scrape_user(args):
             book = scrape_book.scrape_book(book_id)
             book["rating"] = get_rating(book_row)
             book["dates_read"] = get_dates_read(book_row)
-            json.dump(
-                book,
-                open(
-                    output_dir
-                    + "/read/"
-                    + book.get("book_id_title")
-                    + ".json",
-                    "w",
-                ),
-                indent=2,
-            )
+
+            file_path = output_dir + book.get("book_id_title") + ".json"
+            json.dump(book, open(file_path, "w"), indent=2)
+
             print("🎉 Scraped " + book.get("book_id_title"))
 
         page += 1
+
+
+def scrape_user(args):
+    get_read_books(args)
 
 
 def main():
@@ -97,6 +96,11 @@ def main():
     parser.add_argument("--output_dir", type=str, default="books")
     args = parser.parse_args()
 
+    args.output_dir = (
+        args.output_dir if args.output_dir.endswith("/") else args.output_dir + "/"
+    )
+
+    os.mkdir(args.output_dir)
     scrape_user(args)
 
 
