@@ -3,8 +3,7 @@ Source: https://github.com/maria-antoniak/goodreads-scraper/blob/master/get_book
 """
 import re
 from urllib.request import urlopen
-
-import bs4
+from bs4 import BeautifulSoup
 
 
 def get_genres(soup):
@@ -79,7 +78,7 @@ def get_id(book_id):
 def scrape_book(book_id):
     url = "https://www.goodreads.com/book/show/" + book_id
     source = urlopen(url)
-    soup = bs4.BeautifulSoup(source, "html.parser")
+    soup = BeautifulSoup(source, "html.parser")
 
     return {
         "book_id_title": book_id,

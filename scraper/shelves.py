@@ -2,10 +2,10 @@ import argparse
 import json
 from urllib.request import urlopen
 import os
-import bs4
+from bs4 import BeautifulSoup
 import re
 
-from scraper import scrape_book
+from scraper import books
 
 
 RATING_STARS_DICT = {
@@ -29,7 +29,7 @@ def get_shelf_url(user_id, shelf, page):
         + "&print=true"
     )
     source = urlopen(url)
-    return bs4.BeautifulSoup(source, "html.parser")
+    return BeautifulSoup(source, "html.parser")
 
 
 def get_id(book_row):
@@ -79,6 +79,7 @@ def get_shelf(args, shelf):
             file_path = output_dir + book_id + ".json"
 
             book = None
+            changed = False
 
             # If the book has already been scraped, just add the shelf
             if os.path.exists(file_path):
@@ -87,19 +88,22 @@ def get_shelf(args, shelf):
                 if shelf not in book["shelves"]:
                     book["shelves"].append(shelf)
                     print("✅ Updated " + book_id)
+                    changed = True
                 file.close()
             # If not already scraped, scrape the book and add the shelf
             else:
-                book = scrape_book.scrape_book(book_id)
+                book = books.scrape_book(book_id)
                 book["rating"] = get_rating(book_row)
                 book["dates_read"] = get_dates_read(book_row)
                 book["shelves"] = [shelf]
                 print("🎉 Scraped " + book_id)
+                changed = True
 
-            # Write the json file for the book
-            file = open(file_path, "w")
-            json.dump(book, file, indent=2)
-            file.close()
+            if changed:
+                # Write the json file for the book
+                file = open(file_path, "w")
+                json.dump(book, file, indent=2)
+                file.close()
 
         page += 1
 
@@ -108,19 +112,17 @@ def get_shelf(args, shelf):
 
 def get_all_shelves(args):
     user_id = args.user_id
-    output_dir = args.output_dir + "books"
+    output_dir = args.output_dir + "books/"
     url = "https://www.goodreads.com/user/show/" + user_id
     source = urlopen(url)
-    soup = bs4.BeautifulSoup(source, "html.parser")
+    soup = BeautifulSoup(source, "html.parser")
 
     os.makedirs(output_dir, exist_ok=True)
 
     shelves_div = soup.find("div", {"id": "shelves"})
-    shelf_containers = shelves_div.findChildren("div", {"class": "shelfContainer"})
+    shelf_links = shelves_div.findChildren("a")
 
-    for container in shelf_containers:
-        shelf_links = container.findChildren("a")
-        for link in shelf_links:
-            base_url = link.attrs.get("href")
-            shelf = re.search(r"\?shelf=([^&]+)", base_url).group(1)
-            get_shelf(args, shelf)
+    for link in shelf_links:
+        base_url = link.attrs.get("href")
+        shelf = re.search(r"\?shelf=([^&]+)", base_url).group(1)
+        get_shelf(args, shelf)

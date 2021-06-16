@@ -3,13 +3,11 @@ import json
 from urllib.request import urlopen
 import os
 import bs4
-
-from scraper import scrape_book
-from scraper import shelf
+from scraper import shelves
 
 
 def scrape_user(args):
-    shelf.get_all_shelves(args)
+    shelves.get_all_shelves(args)
 
 
 def main():
