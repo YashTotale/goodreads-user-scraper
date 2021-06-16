@@ -3,9 +3,9 @@
 <h1 align="center">Goodreads User Scraper</h1>
 
 <p align="center">
-<a href="https://pypi.org/project/goodreads-user-scraper/"><img alt="Node CI Badge" src="https://img.shields.io/pypi/v/goodreads-user-scraper?style=flat-square&labelColor=000000&logo=pypi&logoColor=FFFFFF&label=Version"></img></a>
-<a href="https://pypi.org/project/goodreads-user-scraper/"><img alt="Node CI Badge" src="https://img.shields.io/pypi/dm/goodreads-user-scraper?style=flat-square&labelColor=000000&logo=pypi&logoColor=FFFFFF&label=Downloads"></img></a>
-<a href="https://github.com/YashTotale/goodreads-user-scraper/blob/main/LICENSE.md"><img alt="Node CI Badge" src="https://img.shields.io/pypi/l/goodreads-user-scraper?style=flat-square&labelColor=000000&label=License"></img></a>
+<a href="https://pypi.org/project/goodreads-user-scraper/"><img alt="Version Badge" src="https://img.shields.io/pypi/v/goodreads-user-scraper?style=flat-square&labelColor=000000&logo=pypi&logoColor=FFFFFF&label=Version"></img></a>
+<a href="https://pypi.org/project/goodreads-user-scraper/"><img alt="Downloads Badge" src="https://img.shields.io/pypi/dm/goodreads-user-scraper?style=flat-square&labelColor=000000&logo=pypi&logoColor=FFFFFF&label=Downloads"></img></a>
+<a href="https://github.com/YashTotale/goodreads-user-scraper/blob/main/LICENSE.md"><img alt="License Badge" src="https://img.shields.io/pypi/l/goodreads-user-scraper?style=flat-square&labelColor=000000&label=License"></img></a>
 </p>
 
 ## Contents <!-- omit in toc -->
