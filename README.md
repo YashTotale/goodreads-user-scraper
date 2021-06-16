@@ -43,7 +43,7 @@ pipx run goodreads-user-scraper --user_id 54739262 --output_dir books
 
 - **Description**: The directory where all scraped data will be output.
 - **Required**: No
-- **Default**: books
+- **Default**: goodreads-data
 
 ## Troubleshooting
 
