@@ -58,14 +58,13 @@ def get_dates_read(book_row):
 
 
 def get_shelf(args, shelf):
+    print("Scraping '" + shelf + "' shelf...")
     user_id = args.user_id
-    output_dir = args.output_dir + shelf + "/"
+    output_dir = args.output_dir + "books/"
     page = 1
 
-    os.makedirs(output_dir, exist_ok=True)
-
     while True:
-        soup = get_shelf_url(user_id, "read", page)
+        soup = get_shelf_url(user_id, shelf, page)
 
         no_content = soup.find("div", {"class": "greyText nocontent stacked"})
         if no_content:
@@ -74,25 +73,47 @@ def get_shelf(args, shelf):
         books_table = soup.find("tbody", {"id": "booksBody"})
         book_rows = books_table.findChildren("tr", recursive=False)
 
+        # Loop through all books in the page
         for book_row in book_rows:
             book_id = get_id(book_row)
-            book = scrape_book.scrape_book(book_id)
-            book["rating"] = get_rating(book_row)
-            book["dates_read"] = get_dates_read(book_row)
+            file_path = output_dir + book_id + ".json"
 
-            file_path = output_dir + book.get("book_id_title") + ".json"
-            json.dump(book, open(file_path, "w"), indent=2)
+            book = None
 
-            print("🎉 Scraped " + book.get("book_id_title"))
+            # If the book has already been scraped, just add the shelf
+            if os.path.exists(file_path):
+                file = open(file_path, "r")
+                book = json.load(file)
+                if shelf not in book["shelves"]:
+                    book["shelves"].append(shelf)
+                    print("✅ Updated " + book_id)
+                file.close()
+            # If not already scraped, scrape the book and add the shelf
+            else:
+                book = scrape_book.scrape_book(book_id)
+                book["rating"] = get_rating(book_row)
+                book["dates_read"] = get_dates_read(book_row)
+                book["shelves"] = [shelf]
+                print("🎉 Scraped " + book_id)
+
+            # Write the json file for the book
+            file = open(file_path, "w")
+            json.dump(book, file, indent=2)
+            file.close()
 
         page += 1
+
+    print()
 
 
 def get_all_shelves(args):
     user_id = args.user_id
+    output_dir = args.output_dir + "books"
     url = "https://www.goodreads.com/user/show/" + user_id
     source = urlopen(url)
     soup = bs4.BeautifulSoup(source, "html.parser")
+
+    os.makedirs(output_dir, exist_ok=True)
 
     shelves_div = soup.find("div", {"id": "shelves"})
     shelf_containers = shelves_div.findChildren("div", {"class": "shelfContainer"})
@@ -102,4 +123,4 @@ def get_all_shelves(args):
         for link in shelf_links:
             base_url = link.attrs.get("href")
             shelf = re.search(r"\?shelf=([^&]+)", base_url).group(1)
-            get_shelf(shelf)
+            get_shelf(args, shelf)

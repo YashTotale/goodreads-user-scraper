@@ -1,5 +1,5 @@
 venv
-books
+goodreads-data
 build
 dist
 __pycache__
