@@ -15,6 +15,7 @@
   - [`--user-id`](#--user-id)
   - [`--output-dir`](#--output-dir)
 - [Troubleshooting](#troubleshooting)
+- [Development](#development)
 
 ## Usage
 
@@ -35,16 +36,41 @@ pipx run goodreads-user-scraper --user_id 54739262 --output_dir books
 
 ### `--user-id`
 
-**Description**: The user whose data should be scraped. Find your user id using [these directions](https://help.goodreads.com/s/article/Where-can-I-find-my-user-ID).
+- **Description**: The user whose data should be scraped. Find your user id using [these directions](https://help.goodreads.com/s/article/Where-can-I-find-my-user-ID).
+- **Required**: Yes
 
 ### `--output-dir`
 
-**Description**: The directory where all scraped data will be output.
+- **Description**: The directory where all scraped data will be output.
+- **Required**: No
+- **Default**: books
 
 ## Troubleshooting
 
-Ensure that your profile is viewable by anyone. Steps:
+Ensure that your profile is viewable by anyone:
 
 1. Navigate to the [Goodreads Account Settings](https://www.goodreads.com/user/edit) page
 2. Click on the `Settings` tab
 3. In the `Privacy` section, under the **Who Can View My Profile** question, select "anyone"
+
+## Development
+
+1. Clone the [GitHub repository](https://github.com/YashTotale/goodreads-user-scraper)
+
+```bash
+git clone https://github.com/YashTotale/goodreads-user-scraper.git
+```
+
+2. Run the install script
+
+```bash
+sh scripts/install.sh
+```
+
+3. Make changes
+
+4. Run the test script
+
+```bash
+sh scripts/test.sh
+```
