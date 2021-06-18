@@ -31,7 +31,7 @@ def get_series_uri(soup):
     series = soup.find(id="bookSeries").find("a")
     if series:
         series_uri = series.get("href")
-        return series_uri
+        return "https://www.goodreads.com" + series_uri
     else:
         return None
 
