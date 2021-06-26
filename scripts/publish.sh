@@ -10,7 +10,7 @@ fi
 
 rm -rf build dist goodreads_user_scraper.egg-info
 bumpversion $version_type
-python3 setup.py sdist bdist_wheel
+python setup.py sdist bdist_wheel
 twine check dist/*
 twine upload dist/*
 git push
