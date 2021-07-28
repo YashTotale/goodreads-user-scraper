@@ -111,6 +111,9 @@ def get_shelf(args: Namespace, shelf: str):
 
 
 def get_all_shelves(args: Namespace):
+    if args.skip_shelves:
+        return
+
     user_id: str = args.user_id
     output_dir: str = args.output_dir + "books/"
     url = "https://www.goodreads.com/user/show/" + user_id

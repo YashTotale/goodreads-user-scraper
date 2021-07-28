@@ -9,6 +9,9 @@ def get_user_name(soup: BeautifulSoup):
 
 
 def get_user_info(args: Namespace):
+    if args.skip_user_info:
+        return
+
     print("Scraping user...")
 
     user_id: str = args.user_id

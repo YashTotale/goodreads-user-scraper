@@ -14,6 +14,8 @@
 - [Arguments](#arguments)
   - [`--user-id`](#--user-id)
   - [`--output-dir`](#--output-dir)
+  - [`--skip_user_info`](#--skip_user_info)
+  - [`--skip_shelves`](#--skip_shelves)
 - [Troubleshooting](#troubleshooting)
 - [Development](#development)
 - [Publishing](#publishing)
@@ -44,7 +46,19 @@ pipx run goodreads-user-scraper --user_id 54739262 --output_dir books
 
 - **Description**: The directory where all scraped data will be output.
 - **Required**: No
-- **Default**: goodreads-data
+- **Default**: `goodreads-data`
+
+### `--skip_user_info`
+
+- **Description**: Whether the script should skip scraping user information.
+- **Required**: No
+- **Default**: `False`
+
+### `--skip_shelves`
+
+- **Description**: Whether the script should skip scraping shelves.
+- **Required**: No
+- **Default**: `False`
 
 ## Troubleshooting
 
