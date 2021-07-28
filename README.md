@@ -16,6 +16,7 @@
   - [`--output-dir`](#--output-dir)
 - [Troubleshooting](#troubleshooting)
 - [Development](#development)
+- [Publishing](#publishing)
 
 ## Usage
 
@@ -57,20 +58,35 @@ Ensure that your profile is viewable by anyone:
 
 1. Clone the [GitHub repository](https://github.com/YashTotale/goodreads-user-scraper)
 
-```bash
-git clone https://github.com/YashTotale/goodreads-user-scraper.git
-```
+   ```shell
+   git clone https://github.com/YashTotale/goodreads-user-scraper.git
+   ```
 
-2. Run the install script
+2. Run the [install script](/scripts/install.sh)
 
-```bash
-sh scripts/install.sh
-```
+   ```shell
+   sh scripts/install.sh
+   ```
 
 3. Make changes
 
-4. Run the test script
+4. Run the [test script](/scripts/test.sh)
 
-```bash
-sh scripts/test.sh
-```
+   ```shell
+   sh scripts/test.sh
+   ```
+
+## Publishing
+
+1. Create `.env`
+
+   ```text
+   TWINE_USERNAME=<foo>
+   TWINE_PASSWORD=<bar>
+   ```
+
+2. Run the [publish script](/scripts/publish.sh)
+
+   ```shell
+   sh scripts/publish.sh
+   ```
