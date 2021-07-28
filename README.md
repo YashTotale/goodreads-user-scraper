@@ -88,5 +88,5 @@ Ensure that your profile is viewable by anyone:
 2. Run the [publish script](/scripts/publish.sh)
 
    ```shell
-   sh scripts/publish.sh
+   sh scripts/publish.sh <patch|minor|major>
    ```
