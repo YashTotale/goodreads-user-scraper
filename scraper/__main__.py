@@ -1,12 +1,12 @@
 import argparse
-import json
-from urllib.request import urlopen
 import os
-import bs4
+
 from scraper import shelves
+from scraper import user
 
 
-def scrape_user(args):
+def scrape_user(args: argparse.Namespace):
+    user.get_user_info(args)
     shelves.get_all_shelves(args)
 
 

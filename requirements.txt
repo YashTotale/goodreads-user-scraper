@@ -3,3 +3,4 @@ twine
 wheel
 bumpversion
 pre-commit
+black
