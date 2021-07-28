@@ -10,7 +10,7 @@ README = (HERE / "README.md").read_text()
 # This call to setup() does all the work
 setup(
     name="goodreads-user-scraper",
-    version="0.0.9",
+    version="0.0.10",
     description="Scrape user data from Goodreads",
     long_description=README,
     long_description_content_type="text/markdown",
