@@ -12,10 +12,11 @@
 
 - [Usage](#usage)
 - [Arguments](#arguments)
-  - [`--user-id`](#--user-id)
-  - [`--output-dir`](#--output-dir)
+  - [`--user_id`](#--user_id)
+  - [`--output_dir`](#--output_dir)
   - [`--skip_user_info`](#--skip_user_info)
   - [`--skip_shelves`](#--skip_shelves)
+  - [`--skip_authors`](#--skip_authors)
 - [Troubleshooting](#troubleshooting)
 - [Development](#development)
 - [Publishing](#publishing)
@@ -26,23 +27,23 @@ Using [pip](https://pypi.org/project/pip/):
 
 ```bash
 pip install goodreads-user-scraper
-goodreads-user-scraper --user_id 54739262 --output_dir books
+goodreads-user-scraper --user_id 54739262 --output_dir goodreads-data
 ```
 
 Using [pipx](https://pypi.org/project/pipx/):
 
 ```bash
-pipx run goodreads-user-scraper --user_id 54739262 --output_dir books
+pipx run goodreads-user-scraper --user_id 54739262 --output_dir goodreads-data
 ```
 
 ## Arguments
 
-### `--user-id`
+### `--user_id`
 
 - **Description**: The user whose data should be scraped. Find your user id using [these directions](https://help.goodreads.com/s/article/Where-can-I-find-my-user-ID).
 - **Required**: Yes
 
-### `--output-dir`
+### `--output_dir`
 
 - **Description**: The directory where all scraped data will be output.
 - **Required**: No
@@ -57,6 +58,12 @@ pipx run goodreads-user-scraper --user_id 54739262 --output_dir books
 ### `--skip_shelves`
 
 - **Description**: Whether the script should skip scraping shelves.
+- **Required**: No
+- **Default**: `False`
+
+### `--skip_authors`
+
+- **Description**: Whether the script should skip scraping authors.
 - **Required**: No
 - **Default**: `False`
 

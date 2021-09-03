@@ -16,6 +16,7 @@ def main():
     parser.add_argument("--output_dir", type=str, default="goodreads-data")
     parser.add_argument("--skip_user_info", type=bool, default=False)
     parser.add_argument("--skip_shelves", type=bool, default=False)
+    parser.add_argument("--skip_authors", type=bool, default=False)
 
     args = parser.parse_args()
 

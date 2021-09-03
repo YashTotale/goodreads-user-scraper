@@ -4,6 +4,9 @@ Source: https://github.com/maria-antoniak/goodreads-scraper/blob/master/get_book
 import re
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
+from argparse import Namespace
+
+from scraper import author
 
 
 def get_genres(soup):
@@ -66,6 +69,11 @@ def get_year_first_published(soup):
         return None
 
 
+def get_author_id(soup):
+    author_url = soup.find("a", {"class": "authorName"}).attrs.get("href")
+    return author_url.split("/")[-1]
+
+
 def get_description(soup):
     return soup.find("div", {"id": "description"}).findAll("span")[-1].text
 
@@ -75,12 +83,12 @@ def get_id(book_id):
     return pattern.search(book_id).group()
 
 
-def scrape_book(book_id):
+def scrape_book(book_id: str, args: Namespace):
     url = "https://www.goodreads.com/book/show/" + book_id
     source = urlopen(url)
     soup = BeautifulSoup(source, "html.parser")
 
-    return {
+    book = {
         "book_id_title": book_id,
         "book_id": get_id(book_id),
         "book_title": " ".join(soup.find("h1", {"id": "bookTitle"}).text.split()),
@@ -90,8 +98,6 @@ def scrape_book(book_id):
         "book_series": get_series_name(soup),
         "book_series_uri": get_series_uri(soup),
         "year_first_published": get_year_first_published(soup),
-        "author": " ".join(soup.find("span", {"itemprop": "name"}).text.split()),
-        "author_url": soup.find("a", {"class": "authorName"}).attrs.get("href"),
         "num_pages": get_num_pages(soup),
         "genres": get_genres(soup),
         "num_ratings": int(
@@ -105,3 +111,8 @@ def scrape_book(book_id):
         ),
         "rating_distribution": get_rating_distribution(soup),
     }
+
+    if not args.skip_authors:
+        book["author"] = author.scrape_author(get_author_id(soup))
+
+    return book

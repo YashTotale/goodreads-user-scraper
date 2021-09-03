@@ -92,7 +92,7 @@ def get_shelf(args: Namespace, shelf: str):
                 file.close()
             # If not already scraped, scrape the book and add the shelf
             else:
-                book = books.scrape_book(book_id)
+                book = books.scrape_book(book_id, args)
                 book["rating"] = get_rating(book_row)
                 book["dates_read"] = get_dates_read(book_row)
                 book["shelves"] = [shelf]
