@@ -27,13 +27,13 @@ Using [pip](https://pypi.org/project/pip/):
 
 ```bash
 pip install goodreads-user-scraper
-goodreads-user-scraper --user_id 54739262 --output_dir goodreads-data
+goodreads-user-scraper --user_id <your id> --output_dir goodreads-data
 ```
 
 Using [pipx](https://pypi.org/project/pipx/):
 
 ```bash
-pipx run goodreads-user-scraper --user_id 54739262 --output_dir goodreads-data
+pipx run goodreads-user-scraper --user_id <your id> --output_dir goodreads-data
 ```
 
 ## Arguments
