@@ -5,7 +5,7 @@ import os
 from bs4 import BeautifulSoup
 import re
 
-from scraper import books
+from . import books
 
 
 RATING_STARS_DICT = {

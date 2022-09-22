@@ -6,7 +6,7 @@ from urllib.request import urlopen
 from bs4 import BeautifulSoup
 from argparse import Namespace
 
-from scraper import author
+from . import author
 
 
 def get_genres(soup):
