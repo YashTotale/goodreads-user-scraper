@@ -1,8 +1,0 @@
-venv
-goodreads-data
-build
-dist
-__pycache__
-.DS_Store
-.env
-goodreads_user_scraper.egg-info

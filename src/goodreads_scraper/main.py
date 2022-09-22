@@ -1,8 +1,9 @@
 import argparse
 import os
 
-from scraper import shelves
-from scraper import user
+from .scraper import shelves
+from .scraper import user
+
 
 
 def scrape_user(args: argparse.Namespace):
