@@ -57,10 +57,10 @@ def get_dates_read(book_row):
     return date_arr
 
 
-def get_shelf(args: Namespace, shelf: str):
+def get_shelf(shelf: str, user_id, output_dir):
     print("Scraping '" + shelf + "' shelf...")
-    user_id: str = args.user_id
-    output_dir: str = args.output_dir + "books/"
+    user_id: str = user_id
+    output_dir: str = output_dir + "books/"
     page = 1
 
     while True:
@@ -110,12 +110,12 @@ def get_shelf(args: Namespace, shelf: str):
     print()
 
 
-def get_all_shelves(args: Namespace):
-    if args.skip_shelves:
+def get_all_shelves(user_id, skip_shelves, output_dir):
+    if skip_shelves:
         return
 
-    user_id: str = args.user_id
-    output_dir: str = args.output_dir + "books/"
+    user_id: str = user_id
+    output_dir: str = output_dir + "books/"
     url = "https://www.goodreads.com/user/show/" + user_id
     source = urlopen(url)
     soup = BeautifulSoup(source, "html.parser")
@@ -128,4 +128,4 @@ def get_all_shelves(args: Namespace):
     for link in shelf_links:
         base_url = link.attrs.get("href")
         shelf: str = re.search(r"\?shelf=([^&]+)", base_url).group(1)
-        get_shelf(args, shelf)
+        get_shelf(shelf=shelf, user_id=user_id, output_dir=output_dir)

@@ -30,7 +30,7 @@ def get_user_info(user_id, output_dir):
 
     output_file = f"{output_dir}/user-{user_id}.json"
     if Path(output_file).is_file():
-        print (f"User Data already exists for user: {user_id}...skipping")
+        print(f"User Data already exists for user: {user_id}...skipping")
         return
     url = "https://www.goodreads.com/user/show/" + user_id
     source = urlopen(url)

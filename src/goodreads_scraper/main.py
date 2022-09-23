@@ -76,7 +76,9 @@ def cli(config: Config, verbose: int):
 @click.option("--skip_shelves", is_flag=True)
 @click.option("--skip_authors", is_flag=True)
 @pass_config
-def getdata(config: Config, user_id, output_dir, skip_user_info, skip_shelves, skip_authors):
+def getdata(
+    config: Config, user_id, output_dir, skip_user_info, skip_shelves, skip_authors
+):
     """Gets users goodreads library and outputs as a json file.
 
     Examples:
@@ -95,11 +97,18 @@ def getdata(config: Config, user_id, output_dir, skip_user_info, skip_shelves, s
     """
     args = None
     os.makedirs(output_dir, exist_ok=True)
-    scrape_user(user_id, skip_user_info, output_dir)
+    scrape_user(
+        user_id=user_id,
+        skip_user_info=skip_user_info,
+        output_dir=output_dir,
+        skip_shelves=skip_shelves,
+    )
 
 
-def scrape_user(user_id, skip_user_info, output_dir):
+def scrape_user(user_id, skip_user_info, output_dir, skip_shelves):
     if not skip_user_info:
-      user.get_user_info(user_id, output_dir)
-    #TODO: Get this to work with click
-    #shelves.get_all_shelves(args)
+        user.get_user_info(user_id=user_id, output_dir=output_dir)
+        # TODO: Get this to work with click
+        shelves.get_all_shelves(
+            user_id=user_id, skip_shelves=skip_shelves, output_dir=output_dir
+        )
