@@ -1,8 +1,8 @@
-from argparse import Namespace
 import json
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
 import re
+from pathlib import Path
 
 
 def get_user_name(soup: BeautifulSoup):
@@ -24,14 +24,14 @@ def get_num_reviews(soup: BeautifulSoup):
     return int(re.findall(r"\d+", container.find_all("a")[2].text)[0])
 
 
-def get_user_info(args: Namespace):
-    if args.skip_user_info:
-        return
+def get_user_info(user_id, output_dir):
 
     print("Scraping user...")
 
-    user_id: str = args.user_id
-    output_file: str = args.output_dir + "user.json"
+    output_file = f"{output_dir}/user-{user_id}.json"
+    if Path(output_file).is_file():
+        print (f"User Data already exists for user: {user_id}...skipping")
+        return
     url = "https://www.goodreads.com/user/show/" + user_id
     source = urlopen(url)
     soup = BeautifulSoup(source, "html.parser")
@@ -49,6 +49,3 @@ def get_user_info(args: Namespace):
     file.close()
 
     print("👤 Scraped user")
-
-    if not args.skip_shelves:
-        print()

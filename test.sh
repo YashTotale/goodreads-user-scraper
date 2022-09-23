@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-poetry run grs --user_id 54739262 --output_dir goodreads-data
+poetry run grs getdata 54739262 data_src

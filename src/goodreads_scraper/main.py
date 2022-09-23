@@ -1,33 +1,105 @@
-import argparse
+"""
+This is where the cli is called.
+We can run our save and other commands from this file
+"""
 import os
+import logging
+import click
 
 from .scraper import shelves
 from .scraper import user
 
+LOGGING_LEVELS = {
+    0: logging.NOTSET,
+    1: logging.ERROR,
+    2: logging.WARN,
+    3: logging.INFO,
+    4: logging.DEBUG,
+}  #: a mapping of `verbose` option counts to logging levels
 
 
-def scrape_user(args: argparse.Namespace):
-    user.get_user_info(args)
-    shelves.get_all_shelves(args)
+LOGGING_LEVELS_NAMES = {
+    0: "NOT SET",
+    1: "ERROR",
+    2: "WARNING",
+    3: "INFO",
+    4: "DEBUG",
+}
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--user_id", type=str, required=True)
-    parser.add_argument("--output_dir", type=str, default="goodreads-data")
-    parser.add_argument("--skip_user_info", type=bool, default=False)
-    parser.add_argument("--skip_shelves", type=bool, default=False)
-    parser.add_argument("--skip_authors", type=bool, default=False)
+# Create the config object
+class Config:  # pylint: disable=too-few-public-methods
+    """
+    This is a object used to store configs, we will
+    eventually pass down via decorators.
 
-    args = parser.parse_args()
+    Verbose: Enables verbose mode, with extra "v"'s providing better verbose output
+    """
 
-    args.output_dir = (
-        args.output_dir if args.output_dir.endswith("/") else args.output_dir + "/"
-    )
-
-    os.makedirs(args.output_dir, exist_ok=True)
-    scrape_user(args)
+    def __init__(self) -> None:
+        self.verbose: int = 0
 
 
-if __name__ == "__main__":
-    main()
+# Create the decorator to pass the config object down
+pass_config = click.make_pass_decorator(Config, ensure=True)
+
+
+@click.group()
+@click.option(
+    "--verbose", "-v", count=True, help="Enable verbose output, (up to -vvvv)"
+)
+@pass_config
+def cli(config: Config, verbose: int):
+    """This runs the cli wrapper and is apart of the click library"""
+
+    # Use the verbosity count to determine the logging level...
+    if verbose > 0:
+        logging.basicConfig(
+            level=LOGGING_LEVELS[verbose]
+            if verbose in LOGGING_LEVELS
+            else logging.DEBUG
+        )
+        click.echo(
+            click.style(
+                f"Verbose logging is enabled \n"
+                f"(LEVEL: {LOGGING_LEVELS_NAMES[verbose]})",
+                fg="yellow",
+            )
+        )
+    config.verbose = verbose
+
+
+@cli.command()
+@click.argument("user_id", required=True)
+@click.argument("output_dir", type=click.Path(writable=True))
+@click.option("--skip_user_info", is_flag=True, default=False)
+@click.option("--skip_shelves", is_flag=True)
+@click.option("--skip_authors", is_flag=True)
+@pass_config
+def getdata(config: Config, user_id, output_dir, skip_user_info, skip_shelves, skip_authors):
+    """Gets users goodreads library and outputs as a json file.
+
+    Examples:
+        >>> getdata 143957887 foo.json
+        >>> getdata --shelve "toread" 143957887 bar.json
+        >>> getdata -s "toread" -s "tobuy" 143957887 bar.json
+        >>> getdata -vvvv 143957887
+
+    Args:
+        user_id (str): The user id of the user you wish to use.
+        out (str optional): The output file.
+            Defaults to Stdout.
+
+    Returns:
+        #TODO Fill this out when you know what it will look like
+    """
+    args = None
+    os.makedirs(output_dir, exist_ok=True)
+    scrape_user(user_id, skip_user_info, output_dir)
+
+
+def scrape_user(user_id, skip_user_info, output_dir):
+    if not skip_user_info:
+      user.get_user_info(user_id, output_dir)
+    #TODO: Get this to work with click
+    #shelves.get_all_shelves(args)
