@@ -102,13 +102,13 @@ def getdata(
         skip_user_info=skip_user_info,
         output_dir=output_dir,
         skip_shelves=skip_shelves,
+        skip_authors=skip_authors
     )
 
 
-def scrape_user(user_id, skip_user_info, output_dir, skip_shelves):
+def scrape_user(user_id, skip_user_info, output_dir, skip_shelves, skip_authors):
     if not skip_user_info:
         user.get_user_info(user_id=user_id, output_dir=output_dir)
-        # TODO: Get this to work with click
         shelves.get_all_shelves(
-            user_id=user_id, skip_shelves=skip_shelves, output_dir=output_dir
+            user_id=user_id, skip_shelves=skip_shelves, output_dir=output_dir, skip_authors=skip_authors
         )

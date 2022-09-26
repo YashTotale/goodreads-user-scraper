@@ -83,7 +83,7 @@ def get_id(book_id):
     return pattern.search(book_id).group()
 
 
-def scrape_book(book_id: str, args: Namespace):
+def scrape_book(book_id: str, skip_authors):
     url = "https://www.goodreads.com/book/show/" + book_id
     source = urlopen(url)
     soup = BeautifulSoup(source, "html.parser")
@@ -112,7 +112,7 @@ def scrape_book(book_id: str, args: Namespace):
         "rating_distribution": get_rating_distribution(soup),
     }
 
-    if not args.skip_authors:
+    if not skip_authors:
         book["author"] = author.scrape_author(get_author_id(soup))
 
     return book

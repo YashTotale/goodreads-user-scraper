@@ -57,10 +57,10 @@ def get_dates_read(book_row):
     return date_arr
 
 
-def get_shelf(shelf: str, user_id, output_dir):
+def get_shelf(shelf: str, user_id, output_dir, skip_authors):
     print("Scraping '" + shelf + "' shelf...")
     user_id: str = user_id
-    output_dir: str = output_dir + "books/"
+    output_dir =  f"{output_dir}/books"
     page = 1
 
     while True:
@@ -76,7 +76,7 @@ def get_shelf(shelf: str, user_id, output_dir):
         # Loop through all books in the page
         for book_row in book_rows:
             book_id = get_id(book_row)
-            file_path = output_dir + book_id + ".json"
+            file_path = f"{output_dir}/{book_id}.json"
 
             book = None
             changed = False
@@ -92,7 +92,7 @@ def get_shelf(shelf: str, user_id, output_dir):
                 file.close()
             # If not already scraped, scrape the book and add the shelf
             else:
-                book = books.scrape_book(book_id, args)
+                book = books.scrape_book(book_id, skip_authors)
                 book["rating"] = get_rating(book_row)
                 book["dates_read"] = get_dates_read(book_row)
                 book["shelves"] = [shelf]
@@ -110,12 +110,12 @@ def get_shelf(shelf: str, user_id, output_dir):
     print()
 
 
-def get_all_shelves(user_id, skip_shelves, output_dir):
+def get_all_shelves(user_id, skip_shelves, output_dir, skip_authors):
     if skip_shelves:
         return
 
     user_id: str = user_id
-    output_dir: str = output_dir + "books/"
+    output_dir =  f"{output_dir}"
     url = "https://www.goodreads.com/user/show/" + user_id
     source = urlopen(url)
     soup = BeautifulSoup(source, "html.parser")
@@ -128,4 +128,9 @@ def get_all_shelves(user_id, skip_shelves, output_dir):
     for link in shelf_links:
         base_url = link.attrs.get("href")
         shelf: str = re.search(r"\?shelf=([^&]+)", base_url).group(1)
-        get_shelf(shelf=shelf, user_id=user_id, output_dir=output_dir)
+        get_shelf(
+            shelf=shelf,
+            user_id=user_id,
+            output_dir=output_dir,
+            skip_authors=skip_authors,
+        )
