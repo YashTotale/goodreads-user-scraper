@@ -79,23 +79,19 @@ def cli(config: Config, verbose: int):
 def getdata(
     config: Config, user_id, output_dir, skip_user_info, skip_shelves, skip_authors
 ):
-    """Gets users goodreads library and outputs as a json file.
+    """Gets users goodreads library and outputs as a json files.
 
     Examples:
-        >>> getdata 143957887 foo.json
-        >>> getdata --shelve "toread" 143957887 bar.json
-        >>> getdata -s "toread" -s "tobuy" 143957887 bar.json
-        >>> getdata -vvvv 143957887
+        >>> getdata 54739262 src_dir
+        >>> getdata --skip_user_info 143957887 src_dir
+        >>> getdata --skip_shelves "read" 143957887 src_dir
+        >>> getdata --skip_shelves "read" --skip_authors 143957887 src_dir
+        >>> getdata -vvvv 143957887 src_dir
 
     Args:
         user_id (str): The user id of the user you wish to use.
-        out (str optional): The output file.
-            Defaults to Stdout.
-
-    Returns:
-        #TODO Fill this out when you know what it will look like
+        output_dir (str): The output file.
     """
-    args = None
     os.makedirs(output_dir, exist_ok=True)
     scrape_user(
         user_id=user_id,
