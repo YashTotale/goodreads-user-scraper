@@ -74,13 +74,25 @@ def get_author_id(soup):
     return author_url.split("/")[-1]
 
 
+# costarica solution to crashing due to description #3
 def get_description(soup):
-    return soup.find("div", {"id": "description"}).findAll("span")[-1].text
+    if soup.find("div", {"id": "description"}) is None:
+        return "No description found"
+    else:
+        return soup.find("div", {"id": "description"}).findAll("span")[-1].text
 
 
 def get_id(book_id):
     pattern = re.compile("([^.-]+)")
     return pattern.search(book_id).group()
+
+
+# costarica solution to crashing cover image #4
+def get_book_image(soup):
+    if soup.find("img", {"id": "coverImage"}) is None:
+        return "No image found"
+    else:
+        return soup.find("img", {"id": "coverImage"}).attrs.get("src")
 
 
 def scrape_book(book_id: str, args: Namespace):
@@ -94,7 +106,9 @@ def scrape_book(book_id: str, args: Namespace):
         "book_title": " ".join(soup.find("h1", {"id": "bookTitle"}).text.split()),
         "book_description": get_description(soup),
         "book_url": url,
-        "book_image": soup.find("img", {"id": "coverImage"}).attrs.get("src"),
+        "book_image": get_book_image(
+            soup
+        ),  # costarica solution to crashing cover image #4
         "book_series": get_series_name(soup),
         "book_series_uri": get_series_uri(soup),
         "year_first_published": get_year_first_published(soup),
