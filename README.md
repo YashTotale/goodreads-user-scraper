@@ -1,11 +1,10 @@
 <h1 align="center">
-  <br>
   <img alt="Goodreads Icon" width="200" src="https://raw.githubusercontent.com/YashTotale/goodreads-user-scraper/main/static/goodreads-icon.png"></img>
-  <br>
+  <p></p>
   <b>Goodreads User Scraper</b>
 </h1>
 
-**<p align="center">Scrape Goodreads User Data: Profile, Book Shelves, Books, Authors</p>**
+<p align="center"><strong>Scrape Goodreads User Data: Profile, Book Shelves, Books, Authors</strong></p>
 
 <p align="center">
   <!-- Version -->
