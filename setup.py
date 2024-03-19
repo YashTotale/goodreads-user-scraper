@@ -14,12 +14,17 @@ setup(
     description="Scrape user data from Goodreads",
     long_description=README,
     long_description_content_type="text/markdown",
-    url="https://github.com/YashTotale/goodreads-user-scraper",
+    project_urls={
+        "Source Code": "https://github.com/YashTotale/goodreads-user-scraper",
+        "Bug Tracker": "https://github.com/YashTotale/goodreads-user-scraper/issues",
+        "Release Notes": "https://github.com/YashTotale/goodreads-user-scraper/releases",
+    },
     author="Yash Totale",
     author_email="totaleyash@gmail.com",
     license="MIT",
     classifiers=[
         "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.7",
     ],
