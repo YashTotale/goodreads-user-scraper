@@ -22,6 +22,11 @@ setup(
     author="Yash Totale",
     author_email="totaleyash@gmail.com",
     license="MIT",
+    keywords=[
+        "Goodreads",
+        "Web Scraper",
+        "CLI",
+    ],
     classifiers=[
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
