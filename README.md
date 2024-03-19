@@ -1,11 +1,19 @@
-<p align="center"><img alt="Goodreads Icon" width="150" src="https://raw.githubusercontent.com/YashTotale/goodreads-user-scraper/main/static/goodreads-icon.png"></img></p>
+<h1 align="center">
+  <br>
+  <img alt="Goodreads Icon" width="200" src="https://raw.githubusercontent.com/YashTotale/goodreads-user-scraper/main/static/goodreads-icon.png"></img>
+  <br>
+  <b>Goodreads User Scraper</b>
+</h1>
 
-<h1 align="center">Goodreads User Scraper</h1>
+**<p align="center">Scrape Goodreads User Data: Profile, Book Shelves, Books, Authors</p>**
 
 <p align="center">
-<a href="https://pypi.org/project/goodreads-user-scraper/"><img alt="Version Badge" src="https://img.shields.io/pypi/v/goodreads-user-scraper?style=flat-square&labelColor=000000&logo=pypi&logoColor=FFFFFF&label=Version"></img></a>
-<a href="https://pypi.org/project/goodreads-user-scraper/"><img alt="Downloads Badge" src="https://img.shields.io/pypi/dm/goodreads-user-scraper?style=flat-square&labelColor=000000&logo=pypi&logoColor=FFFFFF&label=Downloads"></img></a>
-<a href="https://github.com/YashTotale/goodreads-user-scraper/blob/main/LICENSE.md"><img alt="License Badge" src="https://img.shields.io/pypi/l/goodreads-user-scraper?style=flat-square&labelColor=000000&label=License"></img></a>
+  <!-- Version -->
+  <a href="https://pypi.org/project/goodreads-user-scraper/"><img src="https://img.shields.io/pypi/v/goodreads-user-scraper?style=for-the-badge&labelColor=000000&label=Version" alt="Version"></a>&nbsp;
+  <!-- Downloads -->
+  <a href="https://pypi.org/project/goodreads-user-scraper/"><img src="https://img.shields.io/pepy/dt/goodreads-user-scraper?style=for-the-badge&labelColor=000000&label=Downloads&logo=pypi&logoColor=FFFFFF" alt="Downloads"></a>&nbsp;
+  <!-- Build -->
+  <a href="https://github.com/YashTotale/goodreads-user-scraper/actions/workflows/integrate.yml?query=branch%3Amain"><img src="https://img.shields.io/github/actions/workflow/status/YashTotale/goodreads-user-scraper/integrate.yml?branch=main&style=for-the-badge&label=Build&logo=github&logoColor=FFFFFF&labelColor=000000" alt="Build"/></a>&nbsp;
 </p>
 
 ## Contents <!-- omit in toc -->
