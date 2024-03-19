@@ -31,17 +31,17 @@ def get_author_id(soup: BeautifulSoup):
 
 def get_genres(soup: BeautifulSoup):
     genres = []
-    genre_links = (
-        soup.find("div", {"data-testid": "genresList"})
-        .find("ul")
-        .find("span")
-        .find_all("a")
-    )
+    genres_container = soup.find("div", {"data-testid": "genresList"})
 
-    for link in genre_links:
-        genre = link.find("span").text
-        genres.append(genre)
-    return genres
+    if genres_container:
+        genre_links = genres_container.find("ul").find("span").find_all("a")
+
+        for link in genre_links:
+            genre = link.find("span").text
+            genres.append(genre)
+        return genres
+
+    return None
 
 
 def get_average_rating(soup: BeautifulSoup):
@@ -123,7 +123,12 @@ def get_image(soup: BeautifulSoup):
 
 
 def get_description(soup: BeautifulSoup):
-    return soup.find("div", {"data-testid": "description"}).findAll("span")[-1].text
+    description_div = soup.find("div", {"data-testid": "description"}).find("span")
+
+    if description_div:
+        return description_div.text
+    else:
+        return None
 
 
 def get_title(soup: BeautifulSoup):
