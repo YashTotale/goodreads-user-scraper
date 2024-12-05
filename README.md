@@ -79,8 +79,8 @@ pipx run goodreads-user-scraper --user_id <your id> --output_dir goodreads-data
 Ensure that your profile is viewable by anyone:
 
 1. Navigate to the [Goodreads Account Settings](https://www.goodreads.com/user/edit) page
-2. Click on the `Settings` tab
-3. In the `Privacy` section, under the **Who Can View My Profile** question, select "anyone"
+2. Click on the `Account & notifications` tab
+3. In the `Privacy` section, under **Who Can View My Profile**, select "anyone". Save your account settings.
 
 ## Development
 
