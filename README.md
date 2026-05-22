@@ -11,8 +11,6 @@
   <a href="https://pypi.org/project/goodreads-user-scraper/"><img src="https://img.shields.io/pypi/v/goodreads-user-scraper?style=for-the-badge&labelColor=000000&label=Version" alt="Version"></a>&nbsp;
   <!-- Downloads -->
   <a href="https://pypi.org/project/goodreads-user-scraper/"><img src="https://img.shields.io/pepy/dt/goodreads-user-scraper?style=for-the-badge&labelColor=000000&label=Downloads&logo=pypi&logoColor=FFFFFF" alt="Downloads"></a>&nbsp;
-  <!-- Build -->
-  <a href="https://github.com/YashTotale/goodreads-user-scraper/actions/workflows/integrate.yml?query=branch%3Amain"><img src="https://img.shields.io/github/actions/workflow/status/YashTotale/goodreads-user-scraper/integrate.yml?branch=main&style=for-the-badge&label=Build&logo=github&logoColor=FFFFFF&labelColor=000000" alt="Build"/></a>&nbsp;
 </p>
 
 ## Contents <!-- omit in toc -->
