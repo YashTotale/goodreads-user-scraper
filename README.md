@@ -31,17 +31,38 @@
 
 ## Usage
 
-Using [pip](https://pypi.org/project/pip/):
+### Install once, then run
+
+Best for repeat use. Installs the CLI into an isolated environment and adds the `goodreads-user-scraper` command to your shell.
+
+Using [pipx](https://pipx.pypa.io/):
 
 ```bash
-pip install goodreads-user-scraper
+pipx install goodreads-user-scraper
 goodreads-user-scraper --user_id <your id> --output_dir goodreads-data
 ```
 
-Using [pipx](https://pypi.org/project/pipx/):
+Or with [uv](https://docs.astral.sh/uv/):
+
+```bash
+uv tool install goodreads-user-scraper
+goodreads-user-scraper --user_id <your id> --output_dir goodreads-data
+```
+
+### Run once without installing
+
+Best for one-off use. Downloads and runs the CLI in a temporary environment: no install step, no `$PATH` changes.
+
+Using `pipx`:
 
 ```bash
 pipx run goodreads-user-scraper --user_id <your id> --output_dir goodreads-data
+```
+
+Or with `uvx` (ships with `uv`):
+
+```bash
+uvx goodreads-user-scraper --user_id <your id> --output_dir goodreads-data
 ```
 
 ## Arguments
@@ -59,21 +80,18 @@ pipx run goodreads-user-scraper --user_id <your id> --output_dir goodreads-data
 
 ### `--skip_user_info`
 
-- **Description**: Whether the script should skip scraping user information.
+- **Description**: If passed, skip scraping user information.
 - **Required**: No
-- **Default**: `False`
 
 ### `--skip_shelves`
 
-- **Description**: Whether the script should skip scraping shelves.
+- **Description**: If passed, skip scraping shelves.
 - **Required**: No
-- **Default**: `False`
 
 ### `--skip_authors`
 
-- **Description**: Whether the script should skip scraping authors.
+- **Description**: If passed, skip scraping authors.
 - **Required**: No
-- **Default**: `False`
 
 ### `--cookie`
 
