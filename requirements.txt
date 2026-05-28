@@ -1,6 +1,6 @@
 beautifulsoup4
 twine
 wheel
-bumpversion
+bump-my-version
 pre-commit
 black
