@@ -16,7 +16,7 @@ fi
 # shellcheck disable=SC1091
 source .venv/bin/activate
 
-python -m pip install --upgrade pip setuptools wheel
+python -m pip install --upgrade pip setuptools
 python -m pip install -e ".[dev]"
 
 pre-commit install
