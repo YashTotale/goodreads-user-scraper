@@ -20,9 +20,9 @@ def init_session(cookie: str | None) -> None:
     global _session, _has_cookie
     _session = requests.Session()
     _session.headers["User-Agent"] = USER_AGENT
+    _has_cookie = bool(cookie)
     if cookie:
         _session.headers["Cookie"] = cookie
-        _has_cookie = True
 
 
 def has_cookie() -> bool:

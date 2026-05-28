@@ -8,7 +8,7 @@ from scraper import http
 
 
 def get_user_name(soup: BeautifulSoup):
-    return soup.find(id="profileNameTopHeading").text.split("\n")[0].strip()
+    return soup.find(id="profileNameTopHeading").text.strip().split("\n")[0].strip()
 
 
 def get_num_ratings(soup: BeautifulSoup):
