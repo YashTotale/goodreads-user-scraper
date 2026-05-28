@@ -16,6 +16,8 @@
 ## Contents <!-- omit in toc -->
 
 - [Usage](#usage)
+  - [Install once, then run](#install-once-then-run)
+  - [Run once without installing](#run-once-without-installing)
 - [Arguments](#arguments)
   - [`--user_id`](#--user_id)
   - [`--output_dir`](#--output_dir)
@@ -25,6 +27,8 @@
   - [`--cookie`](#--cookie)
   - [`--cookie_file`](#--cookie_file)
 - [Authentication](#authentication)
+  - [Getting your session cookie](#getting-your-session-cookie)
+  - [Passing the cookie](#passing-the-cookie)
 - [Troubleshooting](#troubleshooting)
 - [Development](#development)
 - [Publishing](#publishing)
