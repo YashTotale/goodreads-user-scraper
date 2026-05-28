@@ -8,3 +8,5 @@ __pycache__
 goodreads_user_scraper.egg-info
 .idea
 .goodreads-cookie
+.pytest_cache
+.coverage

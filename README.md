@@ -158,13 +158,23 @@ Shelf scraping requires a session cookie regardless of profile visibility — se
 
 3. Make changes
 
-4. Run the [test script](/scripts/test.sh)
+4. Run the unit tests
+
+   ```shell
+   pytest
+   ```
+
+   These run against saved Goodreads HTML in `tests/fixtures/` — no network, no cookie. This is the CI gate on every push and PR.
+
+   When Goodreads changes its markup, refresh the fixtures with [`scripts/capture_fixtures.py`](/scripts/capture_fixtures.py) (reads your cookie from `.goodreads-cookie` if present), then re-run `pytest`.
+
+5. Optionally run the live smoke test
 
    ```shell
    bash scripts/test.sh
    ```
 
-   To test shelf scraping, save your Goodreads cookie to a gitignored `.goodreads-cookie` file in the repo root — the test script picks it up automatically.
+   This scrapes the real Goodreads site end to end. To include shelf scraping, save your Goodreads cookie to a gitignored `.goodreads-cookie` file in the repo root — the test script picks it up automatically. CI runs this monthly (see [`integration.yml`](/.github/workflows/integration.yml)) to catch Goodreads markup changes.
 
 ## Publishing
 
