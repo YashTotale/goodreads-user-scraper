@@ -1,0 +1,77 @@
+name: 🐛 Bug report
+description: Report a problem with goodreads-user-scraper
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug report. Please fill out the fields below so the issue can be reproduced.
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      description: A clear description of what's going wrong.
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command run
+      description: The exact command you executed.
+      placeholder: goodreads-user-scraper --user_id 12345678
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Error output
+      description: The full error message or traceback. Please don't truncate.
+      render: shell
+    validations:
+      required: true
+  - type: input
+    id: user_id
+    attributes:
+      label: Goodreads user ID
+      description: If the bug is specific to a particular profile, include the user ID. Leave blank if not applicable.
+      placeholder: "12345678"
+  - type: input
+    id: package_version
+    attributes:
+      label: Package version
+      description: Output of `pip show goodreads-user-scraper | grep Version`
+      placeholder: "1.2.4"
+    validations:
+      required: true
+  - type: input
+    id: python_version
+    attributes:
+      label: Python version
+      description: Output of `python --version`
+      placeholder: "Python 3.11.4"
+    validations:
+      required: true
+  - type: dropdown
+    id: install_method
+    attributes:
+      label: Install method
+      options:
+        - pip install goodreads-user-scraper
+        - local install (install.sh)
+        - other
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: "macOS 14.5 / Ubuntu 22.04 / Windows 11"
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Anything else that might help.
