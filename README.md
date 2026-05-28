@@ -91,7 +91,7 @@ Ensure that your profile is viewable by anyone:
 2. Run the [install script](/scripts/install.sh)
 
    ```shell
-   sh scripts/install.sh
+   bash scripts/install.sh
    ```
 
 3. Make changes
