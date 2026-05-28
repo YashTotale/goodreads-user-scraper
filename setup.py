@@ -11,7 +11,7 @@ README = (HERE / "README.md").read_text()
 setup(
     name="goodreads-user-scraper",
     version="1.2.5",
-    description="Scrape user data from Goodreads",
+    description="Scrape Goodreads User Data: Profile, Book Shelves, Books, Authors",
     long_description=README,
     long_description_content_type="text/markdown",
     project_urls={
@@ -31,15 +31,12 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.10",
-        "Programming Language :: Python :: 3.11",
-        "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3.13",
     ],
-    python_requires=">=3.10",
+    python_requires=">=3.13",
     packages=["scraper"],
     include_package_data=True,
-    install_requires=["beautifulsoup4"],
+    install_requires=["beautifulsoup4", "requests"],
     extras_require={
         "dev": [
             "black",
