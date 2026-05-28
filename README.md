@@ -99,7 +99,7 @@ Ensure that your profile is viewable by anyone:
 4. Run the [test script](/scripts/test.sh)
 
    ```shell
-   sh scripts/test.sh
+   bash scripts/test.sh
    ```
 
 ## Publishing
