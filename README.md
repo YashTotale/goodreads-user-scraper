@@ -104,17 +104,12 @@ Ensure that your profile is viewable by anyone:
 
 ## Publishing
 
-1. Create a PyPI API token at https://pypi.org/manage/account/token/ scoped to this project.
+Publishing is automated via GitHub Actions using PyPI [Trusted Publishing](https://docs.pypi.org/trusted-publishers/) (OIDC) — no API tokens are stored.
 
-2. Create `.env`
+Run the [publish script](/scripts/publish.sh) with the version bump type:
 
-   ```text
-   TWINE_USERNAME=__token__
-   TWINE_PASSWORD=pypi-<your-token>
-   ```
+```shell
+bash scripts/publish.sh <patch|minor|major>
+```
 
-3. Run the [publish script](/scripts/publish.sh)
-
-   ```shell
-   bash scripts/publish.sh <patch|minor|major>
-   ```
+The script bumps the version, creates a git tag, and pushes it. The [publish workflow](/.github/workflows/publish.yml) builds the distribution and uploads it to PyPI on any pushed `v*` tag.
