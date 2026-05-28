@@ -36,6 +36,15 @@ setup(
     packages=["scraper"],
     include_package_data=True,
     install_requires=["beautifulsoup4"],
+    extras_require={
+        "dev": [
+            "black",
+            "bump-my-version",
+            "pre-commit",
+            "twine",
+            "wheel",
+        ],
+    },
     entry_points={
         "console_scripts": [
             "goodreads-user-scraper=scraper.__main__:main",
