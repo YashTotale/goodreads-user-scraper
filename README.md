@@ -99,7 +99,7 @@ Ensure that your profile is viewable by anyone:
 4. Run the [test script](/scripts/test.sh)
 
    ```shell
-   sh scripts/test.sh
+   bash scripts/test.sh
    ```
 
 ## Publishing
@@ -114,5 +114,5 @@ Ensure that your profile is viewable by anyone:
 2. Run the [publish script](/scripts/publish.sh)
 
    ```shell
-   sh scripts/publish.sh <patch|minor|major>
+   bash scripts/publish.sh <patch|minor|major>
    ```
