@@ -13,18 +13,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
-
-      - name: Setup Environment Variables
-        run: echo '${{ secrets.ENV_FILE }}' > .env
+        uses: actions/checkout@v4
 
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
-          python-version: 3.8
+          python-version: "3.12"
+          cache: pip
 
-      - name: Install dependencies
-        run: bash scripts/install.sh
+      - name: Install package
+        run: pip install -e .
+
+      - name: Lint
+        uses: pre-commit/action@v3.0.1
 
       - name: Test Project
         run: bash scripts/test.sh

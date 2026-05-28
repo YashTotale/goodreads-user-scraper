@@ -104,15 +104,17 @@ Ensure that your profile is viewable by anyone:
 
 ## Publishing
 
-1. Create `.env`
+1. Create a PyPI API token at https://pypi.org/manage/account/token/ scoped to this project.
+
+2. Create `.env`
 
    ```text
-   TWINE_USERNAME=<foo>
-   TWINE_PASSWORD=<bar>
+   TWINE_USERNAME=__token__
+   TWINE_PASSWORD=pypi-<your-token>
    ```
 
-2. Run the [publish script](/scripts/publish.sh)
+3. Run the [publish script](/scripts/publish.sh)
 
    ```shell
-   sh scripts/publish.sh <patch|minor|major>
+   bash scripts/publish.sh <patch|minor|major>
    ```

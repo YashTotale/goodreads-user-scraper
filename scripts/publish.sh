@@ -9,7 +9,7 @@ then
 fi
 
 rm -rf build dist goodreads_user_scraper.egg-info
-bumpversion $version_type
+bump-my-version bump $version_type
 python setup.py sdist bdist_wheel
 twine check dist/*
 twine upload dist/*
