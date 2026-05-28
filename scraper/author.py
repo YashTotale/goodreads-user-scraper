@@ -1,6 +1,8 @@
 import re
-from urllib.request import urlopen
+
 from bs4 import BeautifulSoup
+
+from scraper import http
 
 
 def get_id_number(author_id):
@@ -24,8 +26,7 @@ def get_author_image(soup, author_name):
 
 def scrape_author(author_id):
     url = "https://www.goodreads.com/author/show/" + author_id
-    source = urlopen(url)
-    soup = BeautifulSoup(source, "html.parser")
+    soup = http.get_soup(url)
 
     author_name = soup.find("span", {"itemprop": "name"}).text.strip()
     id_number = get_id_number(author_id)

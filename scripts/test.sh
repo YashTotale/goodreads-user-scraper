@@ -16,4 +16,8 @@ if ! command -v "$PYTHON" >/dev/null 2>&1; then
   exit 1
 fi
 
-"$PYTHON" -m scraper --user_id 54739262 --output_dir goodreads-data
+if [ -f .goodreads-cookie ]; then
+  "$PYTHON" -m scraper --user_id 54739262 --output_dir goodreads-data --cookie_file .goodreads-cookie
+else
+  "$PYTHON" -m scraper --user_id 54739262 --output_dir goodreads-data
+fi

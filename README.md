@@ -22,6 +22,9 @@
   - [`--skip_user_info`](#--skip_user_info)
   - [`--skip_shelves`](#--skip_shelves)
   - [`--skip_authors`](#--skip_authors)
+  - [`--cookie`](#--cookie)
+  - [`--cookie_file`](#--cookie_file)
+- [Authentication](#authentication)
 - [Troubleshooting](#troubleshooting)
 - [Development](#development)
 - [Publishing](#publishing)
@@ -72,6 +75,41 @@ pipx run goodreads-user-scraper --user_id <your id> --output_dir goodreads-data
 - **Required**: No
 - **Default**: `False`
 
+### `--cookie`
+
+- **Description**: Your Goodreads session cookie (the full `Cookie:` request-header value). Required for shelf scraping — see [Authentication](#authentication).
+- **Required**: No
+- **Default**: None
+
+### `--cookie_file`
+
+- **Description**: Path to a text file containing your Goodreads session cookie. Used only if `--cookie` is not passed and `GOODREADS_COOKIE` is not set.
+- **Required**: No
+- **Default**: None
+
+## Authentication
+
+Shelf scraping requires authentication — Goodreads hides shelf data behind login. The other endpoints (profile, individual books, authors) work anonymously.
+
+### Getting your session cookie
+
+1. Sign in to Goodreads in your browser.
+2. Open DevTools (Cmd/Ctrl+Shift+I) and switch to the Network tab.
+3. Refresh the page, then click any `goodreads.com` request in the list.
+4. In the request Headers, find the `Cookie:` header and copy its full value.
+
+### Passing the cookie
+
+In order of precedence (first one set wins):
+
+1. `--cookie "<cookie string>"`
+2. `GOODREADS_COOKIE` environment variable
+3. `--cookie_file <path-to-file>`
+
+Cookies typically last several weeks. If you see a "Cookie appears invalid or expired" error, re-grab the cookie from your browser.
+
+If no cookie is provided, shelf scraping is skipped with a warning. Pass `--skip_shelves` to suppress the warning.
+
 ## Troubleshooting
 
 Ensure that your profile is viewable by anyone:
@@ -79,6 +117,8 @@ Ensure that your profile is viewable by anyone:
 1. Navigate to the [Goodreads Account Settings](https://www.goodreads.com/user/edit) page
 2. Click on the `Account & notifications` tab
 3. In the `Privacy` section, under **Who Can View My Profile**, select "anyone". Save your account settings.
+
+Shelf scraping requires a session cookie regardless of profile visibility — see [Authentication](#authentication).
 
 ## Development
 
@@ -101,6 +141,8 @@ Ensure that your profile is viewable by anyone:
    ```shell
    bash scripts/test.sh
    ```
+
+   To test shelf scraping, save your Goodreads cookie to a gitignored `.goodreads-cookie` file in the repo root — the test script picks it up automatically.
 
 ## Publishing
 

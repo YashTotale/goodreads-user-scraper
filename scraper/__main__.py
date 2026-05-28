@@ -1,8 +1,9 @@
 import argparse
 import os
+import sys
+from pathlib import Path
 
-from scraper import shelves
-from scraper import user
+from scraper import http, shelves, user
 
 
 def scrape_user(args: argparse.Namespace):
@@ -10,21 +11,37 @@ def scrape_user(args: argparse.Namespace):
     shelves.get_all_shelves(args)
 
 
+def resolve_cookie(args: argparse.Namespace) -> str | None:
+    if args.cookie:
+        return args.cookie
+    env = os.environ.get("GOODREADS_COOKIE")
+    if env:
+        return env
+    if args.cookie_file:
+        path = Path(args.cookie_file)
+        if not path.exists():
+            sys.exit(f"❌ --cookie_file path does not exist: {path}")
+        return path.read_text().strip()
+    return None
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--user_id", type=str, required=True)
-    parser.add_argument("--output_dir", type=str, default="goodreads-data")
-    parser.add_argument("--skip_user_info", type=bool, default=False)
-    parser.add_argument("--skip_shelves", type=bool, default=False)
-    parser.add_argument("--skip_authors", type=bool, default=False)
+    parser.add_argument("--output_dir", type=Path, default=Path("goodreads-data"))
+    parser.add_argument("--skip_user_info", action="store_true")
+    parser.add_argument("--skip_shelves", action="store_true")
+    parser.add_argument("--skip_authors", action="store_true")
+    parser.add_argument("--cookie", type=str, default=None)
+    parser.add_argument("--cookie_file", type=str, default=None)
 
     args = parser.parse_args()
 
-    args.output_dir = (
-        args.output_dir if args.output_dir.endswith("/") else args.output_dir + "/"
-    )
+    args.output_dir.mkdir(parents=True, exist_ok=True)
 
-    os.makedirs(args.output_dir, exist_ok=True)
+    cookie = resolve_cookie(args)
+    http.init_session(cookie)
+
     scrape_user(args)
 
 

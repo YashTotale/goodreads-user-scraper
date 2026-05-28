@@ -1,12 +1,14 @@
 from argparse import Namespace
 import json
-from urllib.request import urlopen
-from bs4 import BeautifulSoup
 import re
+
+from bs4 import BeautifulSoup
+
+from scraper import http
 
 
 def get_user_name(soup: BeautifulSoup):
-    return soup.find(id="profileNameTopHeading").text.strip()
+    return soup.find(id="profileNameTopHeading").text.split("\n")[0].strip()
 
 
 def get_num_ratings(soup: BeautifulSoup):
@@ -31,10 +33,9 @@ def get_user_info(args: Namespace):
     print("Scraping user...")
 
     user_id: str = args.user_id
-    output_file: str = args.output_dir + "user.json"
+    output_file = args.output_dir / "user.json"
     url = "https://www.goodreads.com/user/show/" + user_id
-    source = urlopen(url)
-    soup = BeautifulSoup(source, "html.parser")
+    soup = http.get_soup(url)
 
     data = {
         "user_id": user_id,
@@ -44,9 +45,8 @@ def get_user_info(args: Namespace):
         "num_reviews": get_num_reviews(soup),
     }
 
-    file = open(output_file, "w")
-    json.dump(data, file, indent=2)
-    file.close()
+    with open(output_file, "w") as file:
+        json.dump(data, file, indent=2)
 
     print("👤 Scraped user")
 

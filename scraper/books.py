@@ -1,26 +1,9 @@
-"""
-Source: https://github.com/maria-antoniak/goodreads-scraper/blob/master/get_books.py
-"""
 import re
-from urllib.request import urlopen
-from bs4 import BeautifulSoup
 from argparse import Namespace
 
-from scraper import author
+from bs4 import BeautifulSoup
 
-
-# def get_rating_distribution(soup: BeautifulSoup):
-#     distribution = re.findall(r"renderRatingGraph\([\s]*\[[0-9,\s]+", str(soup))[0]
-#     distribution = " ".join(distribution.split())
-#     distribution = [int(c.strip()) for c in distribution.split("[")[1].split(",")]
-#     distribution_dict = {
-#         5: distribution[0],
-#         4: distribution[1],
-#         3: distribution[2],
-#         2: distribution[3],
-#         1: distribution[4],
-#     }
-#     return distribution_dict
+from scraper import author, http
 
 
 def get_author_id(soup: BeautifulSoup):
@@ -51,7 +34,7 @@ def get_average_rating(soup: BeautifulSoup):
 
     if average_rating:
         return float(average_rating)
-    return ""
+    return None
 
 
 def get_num_reviews(soup: BeautifulSoup):
@@ -62,7 +45,7 @@ def get_num_reviews(soup: BeautifulSoup):
             r"(\d{1,3}(,\d{3})*(\.\d+)?)", num_reviews.text.strip()
         ).group(1)
         return int(num_reviews.replace(",", ""))
-    return ""
+    return None
 
 
 def get_num_ratings(soup: BeautifulSoup):
@@ -73,7 +56,7 @@ def get_num_ratings(soup: BeautifulSoup):
             r"(\d{1,3}(,\d{3})*(\.\d+)?)", num_ratings.text.strip()
         ).group(1)
         return int(num_ratings.replace(",", ""))
-    return ""
+    return None
 
 
 def get_num_pages(soup: BeautifulSoup):
@@ -107,17 +90,6 @@ def get_series_uri(soup: BeautifulSoup):
         return None
 
 
-# def get_series_name(soup: BeautifulSoup):
-#     title_section = soup.find("h1", {"data-testid": "bookTitle"}).parent
-#     series_container = title_section.find("h3")
-
-#     if series_container:
-#         series_name = re.search(r"\((.*?)\)", series_container.find("a").text).group(1)
-#         return series_name
-#     else:
-#         return None
-
-
 def get_image(soup: BeautifulSoup):
     return soup.find("img", {"class": "ResponsiveImage"}).attrs.get("src")
 
@@ -142,8 +114,7 @@ def get_id(book_id: str):
 
 def scrape_book(book_id: str, args: Namespace):
     url = "https://www.goodreads.com/book/show/" + book_id
-    source = urlopen(url)
-    soup = BeautifulSoup(source, "html.parser")
+    soup = http.get_soup(url)
 
     book = {
         "book_id_title": book_id,
@@ -152,7 +123,6 @@ def scrape_book(book_id: str, args: Namespace):
         "book_description": get_description(soup),
         "book_url": url,
         "book_image": get_image(soup),
-        # "book_series": get_series_name(soup),
         "book_series_uri": get_series_uri(soup),
         "year_first_published": get_year_first_published(soup),
         "num_pages": get_num_pages(soup),
@@ -160,7 +130,6 @@ def scrape_book(book_id: str, args: Namespace):
         "num_ratings": get_num_ratings(soup),
         "num_reviews": get_num_reviews(soup),
         "average_rating": get_average_rating(soup),
-        # "rating_distribution": get_rating_distribution(soup),
     }
 
     if not args.skip_authors:
