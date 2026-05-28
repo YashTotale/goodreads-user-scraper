@@ -1,3 +1,19 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
-python -m scraper --user_id 54739262 --output_dir goodreads-data
+cd "$(dirname "$0")/.."
+
+if [ -f .venv/bin/activate ]; then
+  # shellcheck disable=SC1091
+  source .venv/bin/activate
+fi
+
+PYTHON="${PYTHON:-python3}"
+
+if ! command -v "$PYTHON" >/dev/null 2>&1; then
+  echo "Error: $PYTHON not found."
+  echo "Run scripts/install.sh first."
+  exit 1
+fi
+
+"$PYTHON" -m scraper --user_id 54739262 --output_dir goodreads-data
