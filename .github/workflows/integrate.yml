@@ -19,5 +19,5 @@ jobs:
           cache: pip
           cache-dependency-path: setup.py
       - uses: pre-commit/action@v3.0.1
-      - run: pip install -e .
-      - run: bash scripts/test.sh
+      - run: pip install -e ".[dev]"
+      - run: pytest

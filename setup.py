@@ -42,6 +42,7 @@ setup(
             "black",
             "bump-my-version",
             "pre-commit",
+            "pytest",
         ],
     },
     entry_points={

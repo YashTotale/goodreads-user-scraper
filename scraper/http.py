@@ -37,12 +37,17 @@ def _detect_auth_failure(soup: BeautifulSoup, body: str) -> bool:
     return False
 
 
-def get_soup(url: str) -> BeautifulSoup:
+def get_html(url: str) -> str:
     assert _session is not None, "init_session() must be called first"
     response = _session.get(url, timeout=DEFAULT_TIMEOUT)
     response.raise_for_status()
-    soup = BeautifulSoup(response.content, "html.parser")
-    if _has_cookie and _detect_auth_failure(soup, response.text):
+    return response.text
+
+
+def get_soup(url: str) -> BeautifulSoup:
+    html = get_html(url)
+    soup = BeautifulSoup(html, "html.parser")
+    if _has_cookie and _detect_auth_failure(soup, html):
         sys.exit(
             "❌ Cookie appears invalid or expired. Re-grab the Cookie header value from your browser DevTools and try again."
         )

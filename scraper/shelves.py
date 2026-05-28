@@ -37,9 +37,7 @@ def get_rating(book_row):
 
 def get_dates_read(book_row):
     cell = book_row.find("td", {"class": "field date_read"})
-    dates = cell.find("div", {"class": "value"}).findChildren(
-        "div", {"class": "date_row"}
-    )
+    dates = cell.find("div", {"class": "value"}).find_all("div", {"class": "date_row"})
     date_arr = []
     for date in dates:
         date_text = date.text.strip().split("\n")[0].strip()
@@ -93,7 +91,7 @@ def get_shelf(args: Namespace, shelf: str):
                 break
 
             books_table = soup.find("tbody", {"id": "booksBody"})
-            book_rows = books_table.findChildren("tr", recursive=False)
+            book_rows = books_table.find_all("tr", recursive=False)
 
             futures = [
                 executor.submit(_process_row, row, args, shelf, output_dir, page)
@@ -131,7 +129,7 @@ def get_all_shelves(args: Namespace):
     output_dir.mkdir(parents=True, exist_ok=True)
 
     shelves_div = soup.find("div", {"id": "shelves"})
-    shelf_links = shelves_div.findChildren("a")
+    shelf_links = shelves_div.find_all("a")
 
     for link in shelf_links:
         base_url = link.attrs.get("href")

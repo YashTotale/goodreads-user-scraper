@@ -1,0 +1,28 @@
+name: Integration (live)
+
+on:
+  schedule:
+    - cron: "0 0 1 * *" # midnight on the 1st of each month
+  workflow_dispatch:
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: setup.py
+      - run: pip install -e .
+      - name: Write cookie file
+        run: |
+          if [ -z "$GOODREADS_COOKIE" ]; then
+            echo "GOODREADS_COOKIE secret is not set; the shelf path would be skipped." >&2
+            exit 1
+          fi
+          printf '%s' "$GOODREADS_COOKIE" > .goodreads-cookie
+        env:
+          GOODREADS_COOKIE: ${{ secrets.GOODREADS_COOKIE }}
+      - run: bash scripts/test.sh
