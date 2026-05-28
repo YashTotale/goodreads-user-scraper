@@ -5,7 +5,7 @@ import sys
 from bs4 import BeautifulSoup
 import requests
 
-DEFAULT_TIMEOUT = 15
+DEFAULT_TIMEOUT = 30
 USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
     "AppleWebKit/537.36 (KHTML, like Gecko) "

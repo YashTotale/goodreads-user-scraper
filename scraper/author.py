@@ -4,6 +4,8 @@ from bs4 import BeautifulSoup
 
 from scraper import http
 
+_cache: dict = {}
+
 
 def get_id_number(author_id):
     pattern = re.compile("([^.-]+)")
@@ -25,13 +27,16 @@ def get_author_image(soup, author_name):
 
 
 def scrape_author(author_id):
+    if author_id in _cache:
+        return _cache[author_id]
+
     url = "https://www.goodreads.com/author/show/" + author_id
     soup = http.get_soup(url)
 
     author_name = soup.find("span", {"itemprop": "name"}).text.strip()
     id_number = get_id_number(author_id)
 
-    return {
+    result = {
         "author_id_title": author_id,
         "author_id": id_number,
         "author_name": author_name,
@@ -39,3 +44,5 @@ def scrape_author(author_id):
         "author_image": get_author_image(soup, author_name),
         "author_description": get_author_description(soup, id_number),
     }
+    _cache[author_id] = result
+    return result

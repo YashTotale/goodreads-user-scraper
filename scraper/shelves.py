@@ -1,8 +1,11 @@
 from argparse import Namespace
+from concurrent.futures import ThreadPoolExecutor
 import json
 import re
 
 from scraper import books, http
+
+MAX_WORKERS = 8
 
 
 def fetch_shelf_page(user_id, shelf, page):
@@ -45,55 +48,61 @@ def get_dates_read(book_row):
     return date_arr
 
 
+def _process_row(book_row, args, shelf, output_dir, page):
+    try:
+        book_id = get_id(book_row)
+        file_path = output_dir / f"{book_id}.json"
+
+        book = None
+        changed = False
+
+        if file_path.exists():
+            with open(file_path, "r") as file:
+                book = json.load(file)
+            if shelf not in book["shelves"]:
+                book["shelves"].append(shelf)
+                print("✅ Updated " + book_id)
+                changed = True
+        else:
+            book = books.scrape_book(book_id, args)
+            book["rating"] = get_rating(book_row)
+            book["dates_read"] = get_dates_read(book_row)
+            book["shelves"] = [shelf]
+            print("🎉 Scraped " + book_id)
+            changed = True
+
+        if changed:
+            with open(file_path, "w") as file:
+                json.dump(book, file, indent=2)
+    except Exception as e:
+        print(f"⚠️  Skipped book on page {page}: {e}")
+
+
 def get_shelf(args: Namespace, shelf: str):
     print("Scraping '" + shelf + "' shelf...")
     user_id: str = args.user_id
     output_dir = args.output_dir / "books"
     page = 1
 
-    while True:
-        soup = fetch_shelf_page(user_id, shelf, page)
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        while True:
+            soup = fetch_shelf_page(user_id, shelf, page)
 
-        no_content = soup.find("div", {"class": "greyText nocontent stacked"})
-        if no_content:
-            break
+            no_content = soup.find("div", {"class": "greyText nocontent stacked"})
+            if no_content:
+                break
 
-        books_table = soup.find("tbody", {"id": "booksBody"})
-        book_rows = books_table.findChildren("tr", recursive=False)
+            books_table = soup.find("tbody", {"id": "booksBody"})
+            book_rows = books_table.findChildren("tr", recursive=False)
 
-        # Loop through all books in the page
-        for book_row in book_rows:
-            try:
-                book_id = get_id(book_row)
-                file_path = output_dir / f"{book_id}.json"
+            futures = [
+                executor.submit(_process_row, row, args, shelf, output_dir, page)
+                for row in book_rows
+            ]
+            for future in futures:
+                future.result()
 
-                book = None
-                changed = False
-
-                # If the book has already been scraped, just add the shelf
-                if file_path.exists():
-                    with open(file_path, "r") as file:
-                        book = json.load(file)
-                    if shelf not in book["shelves"]:
-                        book["shelves"].append(shelf)
-                        print("✅ Updated " + book_id)
-                        changed = True
-                # If not already scraped, scrape the book and add the shelf
-                else:
-                    book = books.scrape_book(book_id, args)
-                    book["rating"] = get_rating(book_row)
-                    book["dates_read"] = get_dates_read(book_row)
-                    book["shelves"] = [shelf]
-                    print("🎉 Scraped " + book_id)
-                    changed = True
-
-                if changed:
-                    with open(file_path, "w") as file:
-                        json.dump(book, file, indent=2)
-            except Exception as e:
-                print(f"⚠️  Skipped book on page {page}: {e}")
-
-        page += 1
+            page += 1
 
     print()
 
