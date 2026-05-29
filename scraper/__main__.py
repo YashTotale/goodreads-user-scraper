@@ -4,14 +4,23 @@ import os
 import sys
 from pathlib import Path
 
+from rich.console import Console
+from rich.text import Text
+
 from scraper import http, shelves, user
+
+console = Console()
 
 
 async def scrape_user(args: argparse.Namespace, cookie: str | None):
     http.init_session(cookie)
     try:
-        await user.get_user_info(args)
-        await shelves.get_all_shelves(args)
+        profile = await user.get_user_info(args)
+        await shelves.get_all_shelves(args, profile)
+        path = str(args.output_dir.resolve())
+        line = Text("📁  Saved to ")
+        line.append(path, style=f"link file://{path}")
+        console.print(line)
     finally:
         await http.close_session()
 
@@ -41,6 +50,12 @@ def main():
     parser.add_argument("--cookie_file", type=str, default=None)
 
     args = parser.parse_args()
+
+    if args.skip_user_info and args.skip_shelves:
+        console.print(
+            "⚠️  Nothing to do: --skip_user_info and --skip_shelves are both set."
+        )
+        return
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
 

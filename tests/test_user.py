@@ -38,8 +38,9 @@ async def test_get_user_info_writes_user_json(tmp_path, mock_get_soup):
         output_dir=tmp_path,
     )
 
-    await user.get_user_info(args)
+    result = await user.get_user_info(args)
 
+    assert result is not None  # returns the parsed profile soup for the shelves phase
     data = json.loads((tmp_path / "user.json").read_text())
     assert data == {
         "user_id": "54739262",

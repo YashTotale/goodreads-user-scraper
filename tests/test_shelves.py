@@ -152,6 +152,25 @@ async def test_get_all_shelves_skips_without_cookie(tmp_path, monkeypatch):
     assert not (tmp_path / "books").exists()
 
 
+async def test_get_all_shelves_reuses_passed_profile(tmp_path, soup, monkeypatch):
+    # When a profile soup is passed in, the shelves phase must not re-fetch it.
+    monkeypatch.setattr("scraper.http.has_cookie", lambda: True)
+    fetched = []
+
+    async def fake(url):
+        fetched.append(url)
+        return soup("shelf_empty.html")  # every shelf page empty → no books to scrape
+
+    monkeypatch.setattr("scraper.http.get_soup", fake)
+
+    args = Namespace(
+        skip_shelves=False, user_id="54739262", output_dir=tmp_path, skip_authors=True
+    )
+    await shelves.get_all_shelves(args, soup("profile.html"))
+
+    assert not any("user/show" in url for url in fetched)
+
+
 async def test_get_all_shelves_dedupes_and_scrapes(
     tmp_path, soup, mock_get_soup, monkeypatch
 ):

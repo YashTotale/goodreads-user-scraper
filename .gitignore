@@ -10,3 +10,4 @@ goodreads_user_scraper.egg-info
 .goodreads-cookie
 .pytest_cache
 .coverage
+docs/superpowers/plans/
