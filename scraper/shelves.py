@@ -5,6 +5,8 @@ import re
 
 from scraper import books, http
 
+PER_PAGE = 100
+
 
 async def fetch_shelf_page(user_id, shelf, page):
     url = (
@@ -14,6 +16,8 @@ async def fetch_shelf_page(user_id, shelf, page):
         + shelf
         + "&page="
         + str(page)
+        + "&per_page="
+        + str(PER_PAGE)
         + "&print=true"
     )
     return await http.get_soup(url)
@@ -93,6 +97,10 @@ async def get_shelf(args: Namespace, shelf: str):
         await asyncio.gather(
             *(_process_row(row, args, shelf, output_dir, page) for row in book_rows)
         )
+
+        # A short page is the last one — no need to fetch an empty terminator page.
+        if len(book_rows) < PER_PAGE:
+            break
 
         page += 1
 

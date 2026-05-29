@@ -108,7 +108,9 @@ async def test_process_row_skips_unparseable_row(tmp_path):
     assert list(tmp_path.iterdir()) == []  # bad row swallowed, nothing written
 
 
-async def test_get_shelf_paginates_then_terminates(tmp_path, soup, mock_get_soup):
+async def test_get_shelf_paginates_then_terminates(
+    tmp_path, soup, mock_get_soup, monkeypatch
+):
     books_dir = tmp_path / "books"
     books_dir.mkdir()
     # Seed every row so each takes the cheap update path instead of re-scraping.
@@ -116,11 +118,44 @@ async def test_get_shelf_paginates_then_terminates(tmp_path, soup, mock_get_soup
     for book_id in book_ids:
         (books_dir / f"{book_id}.json").write_text(json.dumps({"shelves": ["seed"]}))
 
-    # Only page 1 (content) and page 2 (empty) are mapped — a page 3 fetch would raise.
-    mock_get_soup({"page=1": "shelf_read.html", "page=2": "shelf_empty.html"})
+    # PER_PAGE=1 makes the 30-row page 1 look "full", so pagination advances to page 2.
+    monkeypatch.setattr(shelves, "PER_PAGE", 1)
+    # mock_get_soup matches by substring; "&page=N&" avoids matching "page=1" in "per_page".
+    mock_get_soup({"&page=1&": "shelf_read.html", "&page=2&": "shelf_empty.html"})
     args = Namespace(user_id="54739262", output_dir=tmp_path, skip_authors=True)
     await shelves.get_shelf(args, "read")
 
     for book_id in book_ids:
         data = json.loads((books_dir / f"{book_id}.json").read_text())
         assert data["shelves"] == ["seed", "read"]
+
+
+async def test_get_shelf_stops_on_short_page(tmp_path, soup, mock_get_soup):
+    books_dir = tmp_path / "books"
+    books_dir.mkdir()
+    book_ids = [shelves.get_id(row) for row in rows(soup, "shelf_read.html")]
+    for book_id in book_ids:
+        (books_dir / f"{book_id}.json").write_text(json.dumps({"shelves": ["seed"]}))
+
+    # shelf_read's 30 rows < PER_PAGE, so this short page ends pagination here.
+    # Only page 1 is mapped; a page 2 fetch would raise (no fixture).
+    mock_get_soup({"&page=1&": "shelf_read.html"})
+    args = Namespace(user_id="54739262", output_dir=tmp_path, skip_authors=True)
+    await shelves.get_shelf(args, "read")
+
+    for book_id in book_ids:
+        data = json.loads((books_dir / f"{book_id}.json").read_text())
+        assert data["shelves"] == ["seed", "read"]
+
+
+async def test_fetch_shelf_page_requests_100_per_page(monkeypatch):
+    captured = []
+
+    async def fake(url):
+        captured.append(url)
+
+    monkeypatch.setattr("scraper.http.get_soup", fake)
+    await shelves.fetch_shelf_page("54739262", "read", 1)
+
+    # Larger pages mean fewer paginations per shelf.
+    assert "per_page=100" in captured[0]
