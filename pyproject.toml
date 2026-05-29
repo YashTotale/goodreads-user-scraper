@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "goodreads-user-scraper"
+description = "Scrape Goodreads User Data: Profile, Book Shelves, Books, Authors"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Yash Totale", email = "totaleyash@gmail.com" }]
+requires-python = ">=3.13"
+keywords = ["Goodreads", "books", "reading", "Web Scraper", "CLI"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
+    "Topic :: Utilities",
+]
+dependencies = ["beautifulsoup4", "requests"]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+dev = ["black==26.5.1", "bump-my-version", "pre-commit", "pytest"]
+
+[project.urls]
+Homepage = "https://github.com/YashTotale/goodreads-user-scraper"
+"Source Code" = "https://github.com/YashTotale/goodreads-user-scraper"
+"Bug Tracker" = "https://github.com/YashTotale/goodreads-user-scraper/issues"
+"Release Notes" = "https://github.com/YashTotale/goodreads-user-scraper/releases"
+
+[project.scripts]
+goodreads-user-scraper = "scraper.__main__:main"
+
+[tool.setuptools]
+packages = ["scraper"]
+
+[tool.setuptools.dynamic]
+version = { attr = "scraper.__version__" }
+
+[tool.black]
+target-version = ["py313", "py314"]
+
+[tool.bumpversion]
+current_version = "1.2.5"
+commit = true
+tag = true
+message = "v{new_version}"
+
+[[tool.bumpversion.files]]
+filename = "scraper/__init__.py"
