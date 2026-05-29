@@ -1,13 +1,9 @@
 import pathlib
 from setuptools import setup
 
-# The directory containing this file
 HERE = pathlib.Path(__file__).parent
-
-# The text of the README file
 README = (HERE / "README.md").read_text()
 
-# This call to setup() does all the work
 setup(
     name="goodreads-user-scraper",
     version="1.2.5",
@@ -15,6 +11,7 @@ setup(
     long_description=README,
     long_description_content_type="text/markdown",
     project_urls={
+        "Homepage": "https://github.com/YashTotale/goodreads-user-scraper",
         "Source Code": "https://github.com/YashTotale/goodreads-user-scraper",
         "Bug Tracker": "https://github.com/YashTotale/goodreads-user-scraper/issues",
         "Release Notes": "https://github.com/YashTotale/goodreads-user-scraper/releases",
@@ -24,14 +21,22 @@ setup(
     license="MIT",
     keywords=[
         "Goodreads",
+        "books",
+        "reading",
         "Web Scraper",
         "CLI",
     ],
     classifiers=[
-        "License :: OSI Approved :: MIT License",
+        "Development Status :: 5 - Production/Stable",
+        "Environment :: Console",
+        "Intended Audience :: Developers",
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3 :: Only",
         "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
+        "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
+        "Topic :: Utilities",
     ],
     python_requires=">=3.13",
     packages=["scraper"],
