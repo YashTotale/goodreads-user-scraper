@@ -22,15 +22,8 @@ console = Console()
 
 async def fetch_shelf_page(user_id, shelf, page):
     url = (
-        "https://www.goodreads.com/review/list/"
-        + user_id
-        + "?shelf="
-        + shelf
-        + "&page="
-        + str(page)
-        + "&per_page="
-        + str(PER_PAGE)
-        + "&print=true"
+        f"https://www.goodreads.com/review/list/{user_id}"
+        f"?shelf={shelf}&page={page}&per_page={PER_PAGE}&print=true"
     )
     return await http.get_soup(url)
 

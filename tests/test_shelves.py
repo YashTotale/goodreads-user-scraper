@@ -85,14 +85,10 @@ def test_dedupe_merges_book_across_shelves(soup):
     row = rows(soup, "shelf_read.html")[0]
     books = shelves._dedupe_books([("read", [row]), ("favorites", [row])])
     assert list(books) == [READ_BOOK_ID]
-    assert books[READ_BOOK_ID]["shelves"] == ["read", "favorites"]
-
-
-def test_dedupe_extracts_rating_and_dates(soup):
-    row = rows(soup, "shelf_read.html")[0]
-    books = shelves._dedupe_books([("read", [row])])
-    assert books[READ_BOOK_ID]["rating"] == 4
-    assert books[READ_BOOK_ID]["dates_read"] == ["May 19, 2026"]
+    entry = books[READ_BOOK_ID]
+    assert entry["shelves"] == ["read", "favorites"]
+    assert entry["rating"] == 4
+    assert entry["dates_read"] == ["May 19, 2026"]
 
 
 def test_dedupe_skips_unparseable_row(soup):
