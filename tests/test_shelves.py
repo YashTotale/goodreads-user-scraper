@@ -13,6 +13,9 @@ def rows(soup, name):
     return body.find_all("tr", recursive=False)
 
 
+# Row parsers
+
+
 def test_get_id(soup):
     assert shelves.get_id(rows(soup, "shelf_read.html")[0]) == READ_BOOK_ID
 
@@ -33,43 +36,80 @@ def test_get_dates_read_when_missing(soup):
     assert shelves.get_dates_read(rows(soup, "shelf_to_read.html")[0]) == []
 
 
-def test_get_all_shelves_skips_without_cookie(tmp_path, monkeypatch):
-    monkeypatch.setattr("scraper.http.has_cookie", lambda: False)
-    fetched = []
-    monkeypatch.setattr("scraper.http.get_soup", lambda url: fetched.append(url))
-
-    args = Namespace(skip_shelves=False, user_id="54739262", output_dir=tmp_path)
-    shelves.get_all_shelves(args)
-
-    assert fetched == []
-    assert not (tmp_path / "books").exists()
+# fetch_shelf_page
 
 
-def test_get_all_shelves_discovers_every_shelf(
-    tmp_path, soup, mock_get_soup, monkeypatch
-):
-    monkeypatch.setattr("scraper.http.has_cookie", lambda: True)
-    mock_get_soup({"user/show": "profile.html"})
-    scraped = []
-    monkeypatch.setattr(
-        "scraper.shelves.get_shelf", lambda args, shelf: scraped.append(shelf)
+async def test_fetch_shelf_page_requests_100_per_page(monkeypatch):
+    captured = []
+
+    async def fake(url):
+        captured.append(url)
+
+    monkeypatch.setattr("scraper.http.get_soup", fake)
+    await shelves.fetch_shelf_page("54739262", "read", 1)
+
+    # Larger pages mean fewer paginations per shelf.
+    assert "per_page=100" in captured[0]
+
+
+# collect_shelf_rows pagination
+
+
+async def test_collect_shelf_rows_paginates_until_empty(mock_get_soup):
+    # Pages accumulate until the empty (nocontent) terminator — page size is not a
+    # termination signal. Keys use "&page=N&" to avoid matching "page=1" in "per_page".
+    mock_get_soup(
+        {
+            "&page=1&": "shelf_read.html",
+            "&page=2&": "shelf_to_read.html",
+            "&page=3&": "shelf_empty.html",
+        }
     )
-
-    args = Namespace(skip_shelves=False, user_id="54739262", output_dir=tmp_path)
-    shelves.get_all_shelves(args)
-
-    # One get_shelf call per shelf link in the profile, including the standard shelves.
-    shelf_links = soup("profile.html").find("div", {"id": "shelves"}).find_all("a")
-    assert len(scraped) == len(shelf_links)
-    assert {"read", "to-read", "currently-reading"} <= set(scraped)
-    assert (tmp_path / "books").exists()
+    collected = await shelves.collect_shelf_rows("54739262", "read")
+    assert len(collected) == 40  # 30 (page 1) + 10 (page 2), then page 3 terminates
 
 
-def test_process_row_creates_book_file(tmp_path, soup, mock_get_soup):
-    mock_get_soup({"book/show": "book.html"})
+# _dedupe_books
+
+
+def test_dedupe_merges_book_across_shelves(soup):
     row = rows(soup, "shelf_read.html")[0]
+    books = shelves._dedupe_books([("read", [row]), ("favorites", [row])])
+    assert list(books) == [READ_BOOK_ID]
+    entry = books[READ_BOOK_ID]
+    assert entry["shelves"] == ["read", "favorites"]
+    assert entry["rating"] == 4
+    assert entry["dates_read"] == ["May 19, 2026"]
 
-    shelves._process_row(row, Namespace(skip_authors=True), "read", tmp_path, 1)
+
+def test_dedupe_skips_unparseable_row(soup):
+    good = rows(soup, "shelf_read.html")[0]
+    bad = BeautifulSoup("<tr></tr>", "html.parser").find("tr")
+    books = shelves._dedupe_books([("read", [good, bad])])
+    assert list(books) == [READ_BOOK_ID]  # malformed row dropped
+
+
+def test_dedupe_skips_row_missing_rating_cell(soup):
+    good = rows(soup, "shelf_read.html")[0]
+    # Parseable title link but no rating/date cells — skipped, not fatal to the run.
+    partial = BeautifulSoup(
+        '<tr><td class="field title"><div class="value">'
+        '<a href="/book/show/123-x">x</a></div></td></tr>',
+        "html.parser",
+    ).find("tr")
+    books = shelves._dedupe_books([("read", [good, partial])])
+    assert list(books) == [READ_BOOK_ID]
+
+
+# process_book
+
+
+async def test_process_book_scrapes_new(tmp_path, mock_get_soup):
+    mock_get_soup({"book/show": "book.html"})
+    info = {"shelves": ["read"], "rating": 4, "dates_read": ["May 19, 2026"]}
+    await shelves.process_book(
+        READ_BOOK_ID, info, Namespace(skip_authors=True), tmp_path
+    )
 
     data = json.loads((tmp_path / f"{READ_BOOK_ID}.json").read_text())
     assert data["shelves"] == ["read"]
@@ -78,14 +118,18 @@ def test_process_row_creates_book_file(tmp_path, soup, mock_get_soup):
     assert data["book_title"] == "Dungeon Crawler Carl"
 
 
-def test_process_row_updates_existing_without_rescrape(tmp_path, soup, monkeypatch):
+async def test_process_book_merges_into_existing_without_rescrape(
+    tmp_path, monkeypatch
+):
     book_file = tmp_path / f"{READ_BOOK_ID}.json"
     book_file.write_text(json.dumps({"shelves": ["read"], "book_title": "SEEDED"}))
     fetched = []
     monkeypatch.setattr("scraper.http.get_soup", lambda url: fetched.append(url))
 
-    row = rows(soup, "shelf_read.html")[0]
-    shelves._process_row(row, Namespace(skip_authors=True), "favorites", tmp_path, 1)
+    info = {"shelves": ["read", "favorites"], "rating": 4, "dates_read": []}
+    await shelves.process_book(
+        READ_BOOK_ID, info, Namespace(skip_authors=True), tmp_path
+    )
 
     data = json.loads(book_file.read_text())
     assert data["shelves"] == ["read", "favorites"]
@@ -93,26 +137,46 @@ def test_process_row_updates_existing_without_rescrape(tmp_path, soup, monkeypat
     assert fetched == []
 
 
-def test_process_row_skips_unparseable_row(tmp_path):
-    bad_row = BeautifulSoup("<tr></tr>", "html.parser")
-    shelves._process_row(bad_row, Namespace(skip_authors=True), "read", tmp_path, 1)
-
-    assert list(tmp_path.iterdir()) == []  # bad row swallowed, nothing written
+# get_all_shelves orchestrator
 
 
-def test_get_shelf_paginates_then_terminates(tmp_path, soup, mock_get_soup):
+async def test_get_all_shelves_skips_without_cookie(tmp_path, monkeypatch):
+    monkeypatch.setattr("scraper.http.has_cookie", lambda: False)
+    fetched = []
+    monkeypatch.setattr("scraper.http.get_soup", lambda url: fetched.append(url))
+
+    args = Namespace(skip_shelves=False, user_id="54739262", output_dir=tmp_path)
+    await shelves.get_all_shelves(args)
+
+    assert fetched == []
+    assert not (tmp_path / "books").exists()
+
+
+async def test_get_all_shelves_dedupes_and_scrapes(
+    tmp_path, soup, mock_get_soup, monkeypatch
+):
+    monkeypatch.setattr("scraper.http.has_cookie", lambda: True)
+    # read + to-read have content; every other shelf resolves to the empty page.
+    mock_get_soup(
+        {
+            "user/show": "profile.html",
+            "shelf=read&page=1&": "shelf_read.html",
+            "shelf=to-read&page=1&": "shelf_to_read.html",
+            "review/list": "shelf_empty.html",  # page 2+ of any shelf terminates here
+            "book/show": "book.html",
+        }
+    )
+    args = Namespace(
+        skip_shelves=False, user_id="54739262", output_dir=tmp_path, skip_authors=True
+    )
+    await shelves.get_all_shelves(args)
+
     books_dir = tmp_path / "books"
-    books_dir.mkdir()
-    # Seed every row so each takes the cheap update path instead of re-scraping.
-    book_ids = [shelves.get_id(row) for row in rows(soup, "shelf_read.html")]
-    for book_id in book_ids:
-        (books_dir / f"{book_id}.json").write_text(json.dumps({"shelves": ["seed"]}))
-
-    # Only page 1 (content) and page 2 (empty) are mapped — a page 3 fetch would raise.
-    mock_get_soup({"page=1": "shelf_read.html", "page=2": "shelf_empty.html"})
-    args = Namespace(user_id="54739262", output_dir=tmp_path, skip_authors=True)
-    shelves.get_shelf(args, "read")
-
-    for book_id in book_ids:
-        data = json.loads((books_dir / f"{book_id}.json").read_text())
-        assert data["shelves"] == ["seed", "read"]
+    assert books_dir.exists()
+    # Every unique book across the two non-empty shelves is scraped exactly once.
+    expected = {shelves.get_id(r) for r in rows(soup, "shelf_read.html")} | {
+        shelves.get_id(r) for r in rows(soup, "shelf_to_read.html")
+    }
+    assert {p.stem for p in books_dir.glob("*.json")} == expected
+    read_book = json.loads((books_dir / f"{READ_BOOK_ID}.json").read_text())
+    assert "read" in read_book["shelves"]

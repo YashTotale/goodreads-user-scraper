@@ -29,7 +29,7 @@ def test_get_num_reviews(soup, fixture):
     assert user.get_num_reviews(soup(fixture)) == 3
 
 
-def test_get_user_info_writes_user_json(tmp_path, mock_get_soup):
+async def test_get_user_info_writes_user_json(tmp_path, mock_get_soup):
     mock_get_soup({"user/show": "profile.html"})
     args = Namespace(
         skip_user_info=False,
@@ -38,7 +38,7 @@ def test_get_user_info_writes_user_json(tmp_path, mock_get_soup):
         output_dir=tmp_path,
     )
 
-    user.get_user_info(args)
+    await user.get_user_info(args)
 
     data = json.loads((tmp_path / "user.json").read_text())
     assert data == {

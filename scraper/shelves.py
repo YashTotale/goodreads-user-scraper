@@ -1,24 +1,31 @@
 from argparse import Namespace
-from concurrent.futures import ThreadPoolExecutor
+import asyncio
 import json
 import re
 
+from rich.console import Console
+from rich.progress import (
+    BarColumn,
+    MofNCompleteColumn,
+    Progress,
+    SpinnerColumn,
+    TaskProgressColumn,
+    TextColumn,
+    TimeElapsedColumn,
+)
+
 from scraper import books, http
 
-MAX_WORKERS = 8
+PER_PAGE = 100
+console = Console()
 
 
-def fetch_shelf_page(user_id, shelf, page):
+async def fetch_shelf_page(user_id, shelf, page):
     url = (
-        "https://www.goodreads.com/review/list/"
-        + user_id
-        + "?shelf="
-        + shelf
-        + "&page="
-        + str(page)
-        + "&print=true"
+        f"https://www.goodreads.com/review/list/{user_id}"
+        f"?shelf={shelf}&page={page}&per_page={PER_PAGE}&print=true"
     )
-    return http.get_soup(url)
+    return await http.get_soup(url)
 
 
 def get_id(book_row):
@@ -46,66 +53,63 @@ def get_dates_read(book_row):
     return date_arr
 
 
-def _process_row(book_row, args, shelf, output_dir, page):
+async def collect_shelf_rows(user_id, shelf):
+    rows = []
+    page = 1
+    while True:
+        soup = await fetch_shelf_page(user_id, shelf, page)
+        if soup.find("div", {"class": "greyText nocontent stacked"}):
+            break
+        body = soup.find("tbody", {"id": "booksBody"})
+        rows.extend(body.find_all("tr", recursive=False))
+        page += 1
+    return rows
+
+
+def _dedupe_books(shelf_rows):
+    books_by_id = {}
+    for shelf, page_rows in shelf_rows:
+        for row in page_rows:
+            try:
+                book_id = get_id(row)
+                entry = books_by_id.get(book_id)
+                if entry is None:
+                    entry = {
+                        "shelves": [],
+                        "rating": get_rating(row),
+                        "dates_read": get_dates_read(row),
+                    }
+                    books_by_id[book_id] = entry
+            except Exception:
+                continue  # skip a malformed row
+            if shelf not in entry["shelves"]:
+                entry["shelves"].append(shelf)
+    return books_by_id
+
+
+async def process_book(book_id, info, args, output_dir):
     try:
-        book_id = get_id(book_row)
         file_path = output_dir / f"{book_id}.json"
-
-        book = None
-        changed = False
-
         if file_path.exists():
             with open(file_path, "r") as file:
                 book = json.load(file)
-            if shelf not in book["shelves"]:
-                book["shelves"].append(shelf)
-                print("✅ Updated " + book_id)
-                changed = True
+            new_shelves = [s for s in info["shelves"] if s not in book["shelves"]]
+            if not new_shelves:
+                return
+            book["shelves"].extend(new_shelves)
         else:
-            book = books.scrape_book(book_id, args)
-            book["rating"] = get_rating(book_row)
-            book["dates_read"] = get_dates_read(book_row)
-            book["shelves"] = [shelf]
-            print("🎉 Scraped " + book_id)
-            changed = True
+            book = await books.scrape_book(book_id, args)
+            book["rating"] = info["rating"]
+            book["dates_read"] = info["dates_read"]
+            book["shelves"] = info["shelves"]
 
-        if changed:
-            with open(file_path, "w") as file:
-                json.dump(book, file, indent=2)
+        with open(file_path, "w") as file:
+            json.dump(book, file, indent=2)
     except Exception as e:
-        print(f"⚠️  Skipped book on page {page}: {e}")
+        console.print(f"⚠️  Skipped {book_id}: {e}")
 
 
-def get_shelf(args: Namespace, shelf: str):
-    print("Scraping '" + shelf + "' shelf...")
-    user_id: str = args.user_id
-    output_dir = args.output_dir / "books"
-    page = 1
-
-    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        while True:
-            soup = fetch_shelf_page(user_id, shelf, page)
-
-            no_content = soup.find("div", {"class": "greyText nocontent stacked"})
-            if no_content:
-                break
-
-            books_table = soup.find("tbody", {"id": "booksBody"})
-            book_rows = books_table.find_all("tr", recursive=False)
-
-            futures = [
-                executor.submit(_process_row, row, args, shelf, output_dir, page)
-                for row in book_rows
-            ]
-            for future in futures:
-                future.result()
-
-            page += 1
-
-    print()
-
-
-def get_all_shelves(args: Namespace):
+async def get_all_shelves(args: Namespace):
     if args.skip_shelves:
         return
 
@@ -124,14 +128,39 @@ def get_all_shelves(args: Namespace):
     user_id: str = args.user_id
     output_dir = args.output_dir / "books"
     url = "https://www.goodreads.com/user/show/" + user_id
-    soup = http.get_soup(url)
-
+    profile = await http.get_soup(url)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    shelves_div = soup.find("div", {"id": "shelves"})
-    shelf_links = shelves_div.find_all("a")
+    shelf_links = profile.find("div", {"id": "shelves"}).find_all("a")
+    shelf_names = [
+        re.search(r"\?shelf=([^&]+)", link.attrs.get("href")).group(1)
+        for link in shelf_links
+    ]
 
-    for link in shelf_links:
-        base_url = link.attrs.get("href")
-        shelf: str = re.search(r"\?shelf=([^&]+)", base_url).group(1)
-        get_shelf(args, shelf)
+    with console.status("Discovering shelves…"):
+        per_shelf = await asyncio.gather(
+            *(collect_shelf_rows(user_id, shelf) for shelf in shelf_names)
+        )
+    books_by_id = _dedupe_books(list(zip(shelf_names, per_shelf)))
+    console.print(f"Found {len(books_by_id)} books across {len(shelf_names)} shelves")
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        MofNCompleteColumn(),
+        TaskProgressColumn(),
+        TimeElapsedColumn(),
+        console=console,
+    ) as progress:
+        task = progress.add_task("Scraping books", total=len(books_by_id))
+
+        async def run(book_id, info):
+            await process_book(book_id, info, args, output_dir)
+            progress.advance(task)
+
+        await asyncio.gather(
+            *(run(book_id, info) for book_id, info in books_by_id.items())
+        )
+
+    console.print(f"✅  {len(books_by_id)} books · {len(shelf_names)} shelves")

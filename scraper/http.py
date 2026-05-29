@@ -1,28 +1,43 @@
-"""Shared HTTP session. Optionally carries a Goodreads cookie."""
+"""Shared async HTTP session. Optionally carries a Goodreads cookie."""
 
+import asyncio
 import sys
 
+import aiohttp
 from bs4 import BeautifulSoup
-import requests
 
 DEFAULT_TIMEOUT = 30
+MAX_CONCURRENCY = 32
 USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
     "AppleWebKit/537.36 (KHTML, like Gecko) "
     "Chrome/120.0.0.0 Safari/537.36"
 )
 
-_session: requests.Session | None = None
+_session: aiohttp.ClientSession | None = None
+_semaphore: asyncio.Semaphore | None = None
 _has_cookie: bool = False
 
 
 def init_session(cookie: str | None) -> None:
-    global _session, _has_cookie
-    _session = requests.Session()
-    _session.headers["User-Agent"] = USER_AGENT
+    global _session, _semaphore, _has_cookie
+    headers = {"User-Agent": USER_AGENT}
     _has_cookie = bool(cookie)
     if cookie:
-        _session.headers["Cookie"] = cookie
+        headers["Cookie"] = cookie
+    _session = aiohttp.ClientSession(
+        headers=headers,
+        timeout=aiohttp.ClientTimeout(total=DEFAULT_TIMEOUT),
+        cookie_jar=aiohttp.DummyCookieJar(),
+    )
+    _semaphore = asyncio.Semaphore(MAX_CONCURRENCY)
+
+
+async def close_session() -> None:
+    global _session
+    if _session is not None:
+        await _session.close()
+        _session = None
 
 
 def has_cookie() -> bool:
@@ -37,15 +52,17 @@ def _detect_auth_failure(soup: BeautifulSoup, body: str) -> bool:
     return False
 
 
-def get_html(url: str) -> str:
-    assert _session is not None, "init_session() must be called first"
-    response = _session.get(url, timeout=DEFAULT_TIMEOUT)
-    response.raise_for_status()
-    return response.text
+async def get_html(url: str) -> str:
+    assert (
+        _session is not None and _semaphore is not None
+    ), "init_session() must be called first"
+    async with _semaphore, _session.get(url) as response:
+        response.raise_for_status()
+        return await response.text()
 
 
-def get_soup(url: str) -> BeautifulSoup:
-    html = get_html(url)
+async def get_soup(url: str) -> BeautifulSoup:
+    html = await get_html(url)
     soup = BeautifulSoup(html, "html.parser")
     if _has_cookie and _detect_auth_failure(soup, html):
         sys.exit(

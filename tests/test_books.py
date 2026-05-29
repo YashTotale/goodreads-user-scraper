@@ -84,9 +84,9 @@ def test_get_id():
     assert books.get_id(BOOK_ID) == "211721806"
 
 
-def test_scrape_book_skips_author_fetch(mock_get_soup):
+async def test_scrape_book_skips_author_fetch(mock_get_soup):
     mock_get_soup({"book/show": "book.html"})
-    book = books.scrape_book(BOOK_ID, Namespace(skip_authors=True))
+    book = await books.scrape_book(BOOK_ID, Namespace(skip_authors=True))
 
     assert "author" not in book
     assert book["book_id_title"] == BOOK_ID
@@ -95,9 +95,9 @@ def test_scrape_book_skips_author_fetch(mock_get_soup):
     assert book["num_pages"] == 450
 
 
-def test_scrape_book_fetches_author(mock_get_soup):
+async def test_scrape_book_fetches_author(mock_get_soup):
     mock_get_soup({"book/show": "book.html", "author/show": "author.html"})
-    book = books.scrape_book(BOOK_ID, Namespace(skip_authors=False))
+    book = await books.scrape_book(BOOK_ID, Namespace(skip_authors=False))
 
     # The author id comes from the book page; the record is fetched and embedded.
     assert book["author"]["author_id_title"] == "999015.Matt_Dinniman"

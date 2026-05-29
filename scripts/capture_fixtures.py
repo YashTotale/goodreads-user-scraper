@@ -13,6 +13,7 @@ different markup to each). Shelf pages require a cookie.
 """
 
 import argparse
+import asyncio
 import re
 import sys
 from pathlib import Path
@@ -104,6 +105,36 @@ def scrub(html, cookie=None):
     return html
 
 
+async def _capture(cookie):
+    # Anonymous pass first, then the cookie-bearing pass. dict.fromkeys collapses
+    # the passes to one when no cookie is given (both would be the anon pass).
+    for session_cookie in dict.fromkeys((None, cookie)):
+        http.init_session(session_cookie)
+        try:
+            wants_cookie = session_cookie is not None
+            for name, url, mode in FIXTURES:
+                if (mode == "anon") == wants_cookie:
+                    continue
+                if mode == "shelf" and not http.has_cookie():
+                    print(f"⏭️  {name}: needs a cookie (skipped)")
+                    continue
+                html = await http.get_html(url)
+                # Goodreads serves login/error pages with a 200, so apply the same
+                # auth-failure check production does before overwriting a fixture.
+                if http.has_cookie() and http._detect_auth_failure(
+                    BeautifulSoup(html, "html.parser"), html
+                ):
+                    sys.exit(
+                        f"❌ {name}: got an auth-failure page — cookie may be expired. Re-grab it and retry."
+                    )
+                (FIXTURES_DIR / name).write_text(
+                    scrub(html, session_cookie), encoding="utf-8"
+                )
+                print(f"✅ {name}")
+        finally:
+            await http.close_session()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cookie", type=str, default=None)
@@ -117,31 +148,7 @@ def main():
 
     cookie = resolve_cookie(args)
     FIXTURES_DIR.mkdir(parents=True, exist_ok=True)
-
-    # Anonymous pass first, then the cookie-bearing pass. dict.fromkeys collapses
-    # the passes to one when no cookie is given (both would be the anon pass).
-    for session_cookie in dict.fromkeys((None, cookie)):
-        http.init_session(session_cookie)
-        wants_cookie = session_cookie is not None
-        for name, url, mode in FIXTURES:
-            if (mode == "anon") == wants_cookie:
-                continue
-            if mode == "shelf" and not http.has_cookie():
-                print(f"⏭️  {name}: needs a cookie (skipped)")
-                continue
-            html = http.get_html(url)
-            # Goodreads serves login/error pages with a 200, so apply the same
-            # auth-failure check production does before overwriting a fixture.
-            if http.has_cookie() and http._detect_auth_failure(
-                BeautifulSoup(html, "html.parser"), html
-            ):
-                sys.exit(
-                    f"❌ {name}: got an auth-failure page — cookie may be expired. Re-grab it and retry."
-                )
-            (FIXTURES_DIR / name).write_text(
-                scrub(html, session_cookie), encoding="utf-8"
-            )
-            print(f"✅ {name}")
+    asyncio.run(_capture(cookie))
 
 
 if __name__ == "__main__":

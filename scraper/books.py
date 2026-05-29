@@ -112,9 +112,9 @@ def get_id(book_id: str):
     return pattern.search(book_id).group()
 
 
-def scrape_book(book_id: str, args: Namespace):
+async def scrape_book(book_id: str, args: Namespace):
     url = "https://www.goodreads.com/book/show/" + book_id
-    soup = http.get_soup(url)
+    soup = await http.get_soup(url)
 
     book = {
         "book_id_title": book_id,
@@ -133,6 +133,6 @@ def scrape_book(book_id: str, args: Namespace):
     }
 
     if not args.skip_authors:
-        book["author"] = author.scrape_author(get_author_id(soup))
+        book["author"] = await author.scrape_author(get_author_id(soup))
 
     return book
