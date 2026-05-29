@@ -69,3 +69,23 @@ async def test_scrape_author_caches_by_id(monkeypatch, soup):
 
     assert first is second  # same cached object
     assert len(fetches) == 1  # fetched only once
+
+
+async def test_scrape_author_retries_after_transient_failure(monkeypatch, soup):
+    calls = []
+
+    async def flaky(url):
+        calls.append(url)
+        if len(calls) == 1:
+            raise RuntimeError("transient")
+        return soup("author.html")
+
+    monkeypatch.setattr("scraper.http.get_soup", flaky)
+
+    with pytest.raises(RuntimeError):
+        await author.scrape_author(AUTHOR_ID)
+    # A failed fetch must not be cached — the next call retries instead of re-raising.
+    record = await author.scrape_author(AUTHOR_ID)
+
+    assert record["author_id"] == "3137322"
+    assert len(calls) == 2

@@ -31,7 +31,11 @@ async def scrape_author(author_id):
     if task is None:
         task = asyncio.create_task(_scrape_author(author_id))
         _tasks[author_id] = task
-    return await task
+    try:
+        return await task
+    except Exception:
+        _tasks.pop(author_id, None)  # don't cache a failed fetch; allow a retry
+        raise
 
 
 async def _scrape_author(author_id):

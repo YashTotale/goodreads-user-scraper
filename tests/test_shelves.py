@@ -55,18 +55,9 @@ async def test_fetch_shelf_page_requests_100_per_page(monkeypatch):
 # collect_shelf_rows pagination
 
 
-async def test_collect_shelf_rows_stops_on_short_page(mock_get_soup):
-    # shelf_read's 30 rows < PER_PAGE, so a short page 1 ends pagination.
-    # Only page 1 is mapped; a page 2 fetch would raise (no fixture).
-    mock_get_soup({"&page=1&": "shelf_read.html"})
-    collected = await shelves.collect_shelf_rows("54739262", "read")
-    assert len(collected) == 30
-
-
-async def test_collect_shelf_rows_accumulates_across_pages(monkeypatch, mock_get_soup):
-    # PER_PAGE=1 forces full pages, so pagination accumulates page 1 + page 2 and
-    # stops on the empty page 3. mock keys use "&page=N&" to avoid matching "per_page".
-    monkeypatch.setattr(shelves, "PER_PAGE", 1)
+async def test_collect_shelf_rows_paginates_until_empty(mock_get_soup):
+    # Pages accumulate until the empty (nocontent) terminator — page size is not a
+    # termination signal. Keys use "&page=N&" to avoid matching "page=1" in "per_page".
     mock_get_soup(
         {
             "&page=1&": "shelf_read.html",
@@ -75,7 +66,7 @@ async def test_collect_shelf_rows_accumulates_across_pages(monkeypatch, mock_get
         }
     )
     collected = await shelves.collect_shelf_rows("54739262", "read")
-    assert len(collected) == 40  # 30 from page 1 + 10 from page 2
+    assert len(collected) == 40  # 30 (page 1) + 10 (page 2), then page 3 terminates
 
 
 # _dedupe_books
@@ -96,6 +87,18 @@ def test_dedupe_skips_unparseable_row(soup):
     bad = BeautifulSoup("<tr></tr>", "html.parser").find("tr")
     books = shelves._dedupe_books([("read", [good, bad])])
     assert list(books) == [READ_BOOK_ID]  # malformed row dropped
+
+
+def test_dedupe_skips_row_missing_rating_cell(soup):
+    good = rows(soup, "shelf_read.html")[0]
+    # Parseable title link but no rating/date cells — skipped, not fatal to the run.
+    partial = BeautifulSoup(
+        '<tr><td class="field title"><div class="value">'
+        '<a href="/book/show/123-x">x</a></div></td></tr>',
+        "html.parser",
+    ).find("tr")
+    books = shelves._dedupe_books([("read", [good, partial])])
+    assert list(books) == [READ_BOOK_ID]
 
 
 # process_book
@@ -157,9 +160,9 @@ async def test_get_all_shelves_dedupes_and_scrapes(
     mock_get_soup(
         {
             "user/show": "profile.html",
-            "shelf=read&": "shelf_read.html",
-            "shelf=to-read&": "shelf_to_read.html",
-            "review/list": "shelf_empty.html",
+            "shelf=read&page=1&": "shelf_read.html",
+            "shelf=to-read&page=1&": "shelf_to_read.html",
+            "review/list": "shelf_empty.html",  # page 2+ of any shelf terminates here
             "book/show": "book.html",
         }
     )

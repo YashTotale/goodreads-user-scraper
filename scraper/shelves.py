@@ -61,11 +61,7 @@ async def collect_shelf_rows(user_id, shelf):
         if soup.find("div", {"class": "greyText nocontent stacked"}):
             break
         body = soup.find("tbody", {"id": "booksBody"})
-        page_rows = body.find_all("tr", recursive=False)
-        rows.extend(page_rows)
-        # A short page is the last one — no need to fetch an empty terminator page.
-        if len(page_rows) < PER_PAGE:
-            break
+        rows.extend(body.find_all("tr", recursive=False))
         page += 1
     return rows
 
@@ -76,16 +72,16 @@ def _dedupe_books(shelf_rows):
         for row in page_rows:
             try:
                 book_id = get_id(row)
+                entry = books_by_id.get(book_id)
+                if entry is None:
+                    entry = {
+                        "shelves": [],
+                        "rating": get_rating(row),
+                        "dates_read": get_dates_read(row),
+                    }
+                    books_by_id[book_id] = entry
             except Exception:
                 continue  # skip a malformed row
-            entry = books_by_id.get(book_id)
-            if entry is None:
-                entry = {
-                    "shelves": [],
-                    "rating": get_rating(row),
-                    "dates_read": get_dates_read(row),
-                }
-                books_by_id[book_id] = entry
             if shelf not in entry["shelves"]:
                 entry["shelves"].append(shelf)
     return books_by_id
