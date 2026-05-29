@@ -163,4 +163,4 @@ async def get_all_shelves(args: Namespace):
             *(run(book_id, info) for book_id, info in books_by_id.items())
         )
 
-    console.print(f"✅ {len(books_by_id)} books · {len(shelf_names)} shelves")
+    console.print(f"✅  {len(books_by_id)} books · {len(shelf_names)} shelves")
