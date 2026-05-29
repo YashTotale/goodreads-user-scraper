@@ -21,11 +21,11 @@
 - [Arguments](#arguments)
   - [`--user_id`](#--user_id)
   - [`--output_dir`](#--output_dir)
+  - [`--cookie`](#--cookie)
+  - [`--cookie_file`](#--cookie_file)
   - [`--skip_user_info`](#--skip_user_info)
   - [`--skip_shelves`](#--skip_shelves)
   - [`--skip_authors`](#--skip_authors)
-  - [`--cookie`](#--cookie)
-  - [`--cookie_file`](#--cookie_file)
 - [Authentication](#authentication)
   - [Getting your session cookie](#getting-your-session-cookie)
   - [Passing the cookie](#passing-the-cookie)
@@ -35,38 +35,24 @@
 
 ## Usage
 
+Use [pipx](https://pipx.pypa.io/) or [uv](https://docs.astral.sh/uv/) — both install the CLI from PyPI.
+
 ### Install once, then run
 
 Best for repeat use. Installs the CLI into an isolated environment and adds the `goodreads-user-scraper` command to your shell.
 
-Using [pipx](https://pipx.pypa.io/):
-
 ```bash
-pipx install goodreads-user-scraper
-goodreads-user-scraper --user_id <your id> --output_dir goodreads-data
-```
-
-Or with [uv](https://docs.astral.sh/uv/):
-
-```bash
-uv tool install goodreads-user-scraper
-goodreads-user-scraper --user_id <your id> --output_dir goodreads-data
+pipx install goodreads-user-scraper      # or: uv tool install goodreads-user-scraper
+goodreads-user-scraper --user_id <your id>
 ```
 
 ### Run once without installing
 
 Best for one-off use. Downloads and runs the CLI in a temporary environment: no install step, no `$PATH` changes.
 
-Using `pipx`:
-
 ```bash
-pipx run goodreads-user-scraper --user_id <your id> --output_dir goodreads-data
-```
-
-Or with `uvx` (ships with `uv`):
-
-```bash
-uvx goodreads-user-scraper --user_id <your id> --output_dir goodreads-data
+pipx run goodreads-user-scraper --user_id <your id>
+# or: uvx goodreads-user-scraper --user_id <your id>
 ```
 
 ## Arguments
@@ -82,21 +68,6 @@ uvx goodreads-user-scraper --user_id <your id> --output_dir goodreads-data
 - **Required**: No
 - **Default**: `goodreads-data`
 
-### `--skip_user_info`
-
-- **Description**: If passed, skip scraping user information.
-- **Required**: No
-
-### `--skip_shelves`
-
-- **Description**: If passed, skip scraping shelves.
-- **Required**: No
-
-### `--skip_authors`
-
-- **Description**: If passed, skip scraping authors.
-- **Required**: No
-
 ### `--cookie`
 
 - **Description**: Your Goodreads session cookie (the full `Cookie:` request-header value). Required for shelf scraping — see [Authentication](#authentication).
@@ -105,13 +76,28 @@ uvx goodreads-user-scraper --user_id <your id> --output_dir goodreads-data
 
 ### `--cookie_file`
 
-- **Description**: Path to a text file containing your Goodreads session cookie. Used only if `--cookie` is not passed and `GOODREADS_COOKIE` is not set.
+- **Description**: Path to a text file containing your Goodreads session cookie.
 - **Required**: No
 - **Default**: None
 
+### `--skip_user_info`
+
+- **Description**: If passed, skip scraping user information.
+- **Required**: No
+
+### `--skip_shelves`
+
+- **Description**: If passed, skip scraping shelves. Books (and their authors) are scraped from your shelves, so this skips them too.
+- **Required**: No
+
+### `--skip_authors`
+
+- **Description**: If passed, skip scraping authors.
+- **Required**: No
+
 ## Authentication
 
-Shelf scraping requires authentication — Goodreads hides shelf data behind login, and the tool gathers books and authors from your shelves. So without a cookie you get a profile only; a cookie adds shelves, books, and authors, and works on your own private profile too.
+Shelf scraping requires a cookie — Goodreads hides shelf data behind login. Without one you get the profile only; with one you also get shelves, books, and authors.
 
 ### Getting your session cookie
 
@@ -136,28 +122,25 @@ If no cookie is provided, shelf scraping is skipped with a warning. Pass `--skip
 
 **Missing profile or shelf data?**
 
-- **Your own account:** pass your session cookie (see [Authentication](#authentication)). Every request is authenticated, so your profile, shelves, and books all scrape even when your profile is private — there's no need to change any Goodreads privacy settings.
-- **Another user's account:** you can only see what your logged-in account is allowed to, so their profile must be publicly viewable. Shelves still require your cookie.
+- **Your own account:** pass your session cookie (see [Authentication](#authentication)) — your profile, shelves, and books all scrape, even on a private profile.
+- **Another user's account:** what you can scrape depends on their profile privacy setting. Shelves always require your cookie (see [Authentication](#authentication)).
+  - **Anyone:** the profile scrapes even without a cookie.
+  - **Goodreads members only:** pass your cookie — any signed-in account works.
+  - **Friends only:** pass your cookie, and your account must be their friend.
 
 ## Development
 
-1. Clone the [GitHub repository](https://github.com/YashTotale/goodreads-user-scraper)
+1. Run the [install script](/scripts/install.sh)
 
-   ```shell
-   git clone https://github.com/YashTotale/goodreads-user-scraper.git
-   ```
-
-2. Run the [install script](/scripts/install.sh)
-
-   ```shell
+   ```bash
    bash scripts/install.sh
    ```
 
-3. Make changes
+2. Make changes
 
-4. Run the unit tests
+3. Run the unit tests
 
-   ```shell
+   ```bash
    pytest
    ```
 
@@ -165,9 +148,9 @@ If no cookie is provided, shelf scraping is skipped with a warning. Pass `--skip
 
    When Goodreads changes its markup, refresh the fixtures with [`scripts/capture_fixtures.py`](/scripts/capture_fixtures.py) (reads your cookie from `.goodreads-cookie` if present), then re-run `pytest`.
 
-5. Optionally run the live smoke test
+4. Optionally run the live smoke test
 
-   ```shell
+   ```bash
    bash scripts/test.sh
    ```
 
@@ -179,7 +162,7 @@ Publishing is automated via GitHub Actions using PyPI [Trusted Publishing](https
 
 Run the [publish script](/scripts/publish.sh) with the version bump type:
 
-```shell
+```bash
 bash scripts/publish.sh <patch|minor|major>
 ```
 

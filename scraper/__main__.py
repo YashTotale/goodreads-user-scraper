@@ -7,7 +7,7 @@ from pathlib import Path
 from rich.console import Console
 from rich.text import Text
 
-from scraper import http, shelves, user
+from scraper import __version__, http, shelves, user
 
 console = Console()
 
@@ -41,13 +41,41 @@ def resolve_cookie(args: argparse.Namespace) -> str | None:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--user_id", type=str, required=True)
-    parser.add_argument("--output_dir", type=Path, default=Path("goodreads-data"))
-    parser.add_argument("--skip_user_info", action="store_true")
-    parser.add_argument("--skip_shelves", action="store_true")
-    parser.add_argument("--skip_authors", action="store_true")
-    parser.add_argument("--cookie", type=str, default=None)
-    parser.add_argument("--cookie_file", type=str, default=None)
+    parser.add_argument(
+        "--version", action="version", version=f"%(prog)s {__version__}"
+    )
+    parser.add_argument(
+        "--user_id", type=str, required=True, help="Goodreads user id to scrape"
+    )
+    parser.add_argument(
+        "--output_dir",
+        type=Path,
+        default=Path("goodreads-data"),
+        help="output directory for scraped data (default: goodreads-data)",
+    )
+    parser.add_argument(
+        "--cookie",
+        type=str,
+        default=None,
+        help="Goodreads session cookie; required for shelf scraping",
+    )
+    parser.add_argument(
+        "--cookie_file",
+        type=str,
+        default=None,
+        help="path to a file containing the session cookie",
+    )
+    parser.add_argument(
+        "--skip_user_info", action="store_true", help="skip scraping user info"
+    )
+    parser.add_argument(
+        "--skip_shelves",
+        action="store_true",
+        help="skip scraping shelves and their books",
+    )
+    parser.add_argument(
+        "--skip_authors", action="store_true", help="skip scraping authors"
+    )
 
     args = parser.parse_args()
 

@@ -4,7 +4,7 @@ from argparse import Namespace
 
 import pytest
 
-from scraper import __main__
+from scraper import __main__, __version__
 
 # resolve_cookie precedence: --cookie > GOODREADS_COOKIE env > --cookie_file.
 
@@ -49,6 +49,14 @@ def _run_cli(monkeypatch, *argv):
     monkeypatch.delenv("GOODREADS_COOKIE", raising=False)
     monkeypatch.setattr(sys, "argv", ["scraper", *argv])
     __main__.main()
+
+
+def test_cli_version_prints_and_exits(monkeypatch, capsys):
+    monkeypatch.setattr(sys, "argv", ["goodreads-user-scraper", "--version"])
+    with pytest.raises(SystemExit) as exc:
+        __main__.main()
+    assert exc.value.code == 0
+    assert capsys.readouterr().out.strip().endswith(__version__)
 
 
 def test_cli_writes_user_json(tmp_path, monkeypatch, mock_get_soup):

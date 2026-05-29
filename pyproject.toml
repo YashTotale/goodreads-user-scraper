@@ -10,7 +10,7 @@ license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Yash Totale", email = "totaleyash@gmail.com" }]
 requires-python = ">=3.13"
-keywords = ["Goodreads", "books", "reading", "Web Scraper", "CLI"]
+keywords = ["Goodreads", "books", "reading", "web scraper", "CLI"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
@@ -30,7 +30,7 @@ dynamic = ["version"]
 dev = ["black==26.5.1", "bump-my-version", "pre-commit", "pytest", "pytest-asyncio"]
 
 [project.urls]
-Homepage = "https://github.com/YashTotale/goodreads-user-scraper"
+Homepage = "https://github.com/YashTotale/goodreads-user-scraper#readme"
 "Source Code" = "https://github.com/YashTotale/goodreads-user-scraper"
 "Bug Tracker" = "https://github.com/YashTotale/goodreads-user-scraper/issues"
 "Release Notes" = "https://github.com/YashTotale/goodreads-user-scraper/releases"
