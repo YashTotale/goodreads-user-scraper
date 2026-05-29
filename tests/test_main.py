@@ -106,8 +106,8 @@ def test_cli_full_run_writes_user_and_books(tmp_path, monkeypatch, mock_get_soup
     user_data = json.loads((tmp_path / "user.json").read_text())
     assert user_data["user_name"] == "Yash Totale"
 
-    # Field-level parsing is pinned by the parser/_process_row tests; here we only
-    # confirm the pipeline produced the book record from the right shelf.
+    # Field-level parsing is pinned by the parser and process_book tests; here we
+    # only confirm the pipeline produced the book record from the right shelf.
     book_path = tmp_path / "books" / "211721806-dungeon-crawler-carl.json"
     book = json.loads(book_path.read_text())
     assert book["book_title"] == "Dungeon Crawler Carl"
