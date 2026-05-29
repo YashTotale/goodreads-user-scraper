@@ -153,8 +153,7 @@ async def test_get_all_shelves_skips_without_cookie(tmp_path, monkeypatch):
 
 
 async def test_get_all_shelves_reuses_passed_profile(tmp_path, soup, monkeypatch):
-    # When the profile soup is supplied by the user phase, the shelves phase must not
-    # re-fetch the profile page.
+    # When a profile soup is passed in, the shelves phase must not re-fetch it.
     monkeypatch.setattr("scraper.http.has_cookie", lambda: True)
     fetched = []
 
