@@ -27,7 +27,7 @@ dependencies = ["beautifulsoup4", "requests"]
 dynamic = ["version"]
 
 [project.optional-dependencies]
-dev = ["black", "bump-my-version", "pre-commit", "pytest"]
+dev = ["black==26.5.1", "bump-my-version", "pre-commit", "pytest"]
 
 [project.urls]
 Homepage = "https://github.com/YashTotale/goodreads-user-scraper"
@@ -43,6 +43,9 @@ packages = ["scraper"]
 
 [tool.setuptools.dynamic]
 version = { attr = "scraper.__version__" }
+
+[tool.black]
+target-version = ["py313", "py314"]
 
 [tool.bumpversion]
 current_version = "1.2.5"
