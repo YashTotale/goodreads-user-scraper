@@ -20,6 +20,19 @@ PER_PAGE = 100
 console = Console()
 
 
+def make_progress():
+    return Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        MofNCompleteColumn(),
+        TaskProgressColumn(),
+        TimeElapsedColumn(),
+        console=console,
+        transient=True,
+    )
+
+
 async def fetch_shelf_page(user_id, shelf, page):
     url = (
         f"https://www.goodreads.com/review/list/{user_id}"
@@ -109,7 +122,7 @@ async def process_book(book_id, info, args, output_dir):
         console.print(f"⚠️  Skipped {book_id}: {e}")
 
 
-async def get_all_shelves(args: Namespace):
+async def get_all_shelves(args: Namespace, profile=None):
     if args.skip_shelves:
         return
 
@@ -127,8 +140,9 @@ async def get_all_shelves(args: Namespace):
 
     user_id: str = args.user_id
     output_dir = args.output_dir / "books"
-    url = "https://www.goodreads.com/user/show/" + user_id
-    profile = await http.get_soup(url)
+    if profile is None:
+        url = "https://www.goodreads.com/user/show/" + user_id
+        profile = await http.get_soup(url)
     output_dir.mkdir(parents=True, exist_ok=True)
 
     shelf_links = profile.find("div", {"id": "shelves"}).find_all("a")
@@ -137,22 +151,20 @@ async def get_all_shelves(args: Namespace):
         for link in shelf_links
     ]
 
-    with console.status("Discovering shelves…"):
-        per_shelf = await asyncio.gather(
-            *(collect_shelf_rows(user_id, shelf) for shelf in shelf_names)
-        )
-    books_by_id = _dedupe_books(list(zip(shelf_names, per_shelf)))
-    console.print(f"Found {len(books_by_id)} books across {len(shelf_names)} shelves")
+    with make_progress() as progress:
+        task = progress.add_task("Finding shelves", total=len(shelf_names))
 
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        BarColumn(),
-        MofNCompleteColumn(),
-        TaskProgressColumn(),
-        TimeElapsedColumn(),
-        console=console,
-    ) as progress:
+        async def collect(shelf):
+            rows = await collect_shelf_rows(user_id, shelf)
+            progress.advance(task)
+            return shelf, rows
+
+        per_shelf = await asyncio.gather(*(collect(shelf) for shelf in shelf_names))
+    console.print(f"📚  {len(shelf_names)} shelves")
+
+    books_by_id = _dedupe_books(per_shelf)
+
+    with make_progress() as progress:
         task = progress.add_task("Scraping books", total=len(books_by_id))
 
         async def run(book_id, info):
@@ -163,4 +175,4 @@ async def get_all_shelves(args: Namespace):
             *(run(book_id, info) for book_id, info in books_by_id.items())
         )
 
-    console.print(f"✅  {len(books_by_id)} books · {len(shelf_names)} shelves")
+    console.print(f"📖  {len(books_by_id)} books")
