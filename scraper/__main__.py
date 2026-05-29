@@ -1,4 +1,5 @@
 import argparse
+import asyncio
 import os
 import sys
 from pathlib import Path
@@ -6,9 +7,13 @@ from pathlib import Path
 from scraper import http, shelves, user
 
 
-def scrape_user(args: argparse.Namespace):
-    user.get_user_info(args)
-    shelves.get_all_shelves(args)
+async def scrape_user(args: argparse.Namespace, cookie: str | None):
+    http.init_session(cookie)
+    try:
+        await user.get_user_info(args)
+        await shelves.get_all_shelves(args)
+    finally:
+        await http.close_session()
 
 
 def resolve_cookie(args: argparse.Namespace) -> str | None:
@@ -40,9 +45,8 @@ def main():
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
     cookie = resolve_cookie(args)
-    http.init_session(cookie)
 
-    scrape_user(args)
+    asyncio.run(scrape_user(args, cookie))
 
 
 if __name__ == "__main__":

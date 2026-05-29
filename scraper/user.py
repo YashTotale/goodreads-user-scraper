@@ -26,7 +26,7 @@ def get_num_reviews(soup: BeautifulSoup):
     return int(re.findall(r"\d+", container.find_all("a")[2].text)[0])
 
 
-def get_user_info(args: Namespace):
+async def get_user_info(args: Namespace):
     if args.skip_user_info:
         return
 
@@ -35,7 +35,7 @@ def get_user_info(args: Namespace):
     user_id: str = args.user_id
     output_file = args.output_dir / "user.json"
     url = "https://www.goodreads.com/user/show/" + user_id
-    soup = http.get_soup(url)
+    soup = await http.get_soup(url)
 
     data = {
         "user_id": user_id,

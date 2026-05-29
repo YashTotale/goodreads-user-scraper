@@ -43,9 +43,9 @@ def test_get_author_description_missing(soup):
 # scrape_author orchestrator
 
 
-def test_scrape_author_builds_record(mock_get_soup):
+async def test_scrape_author_builds_record(mock_get_soup):
     mock_get_soup({"author/show": "author.html"})
-    record = author.scrape_author(AUTHOR_ID)
+    record = await author.scrape_author(AUTHOR_ID)
 
     assert record["author_id_title"] == AUTHOR_ID
     assert record["author_id"] == "3137322"
@@ -55,17 +55,17 @@ def test_scrape_author_builds_record(mock_get_soup):
     assert "Dostoevsky" in record["author_description"]
 
 
-def test_scrape_author_caches_by_id(monkeypatch, soup):
+async def test_scrape_author_caches_by_id(monkeypatch, soup):
     fetches = []
 
-    def fake_get_soup(url):
+    async def fake_get_soup(url):
         fetches.append(url)
         return soup("author.html")
 
     monkeypatch.setattr("scraper.http.get_soup", fake_get_soup)
 
-    first = author.scrape_author(AUTHOR_ID)
-    second = author.scrape_author(AUTHOR_ID)
+    first = await author.scrape_author(AUTHOR_ID)
+    second = await author.scrape_author(AUTHOR_ID)
 
     assert first is second  # same cached object
     assert len(fetches) == 1  # fetched only once

@@ -38,7 +38,7 @@ def mock_get_soup(monkeypatch):
     """Map a URL substring to a fixture, returned in place of a real fetch."""
 
     def install(url_map):
-        def fake(url):
+        async def fake(url):
             for substring, name in url_map.items():
                 if substring in url:
                     return _soup(name)
@@ -52,4 +52,4 @@ def mock_get_soup(monkeypatch):
 @pytest.fixture(autouse=True)
 def _clear_author_cache():
     """scrape_author memoizes in a module global; reset it so tests stay isolated."""
-    author._cache.clear()
+    author._tasks.clear()

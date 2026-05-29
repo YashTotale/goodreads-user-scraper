@@ -1,14 +1,12 @@
 from argparse import Namespace
-from concurrent.futures import ThreadPoolExecutor
+import asyncio
 import json
 import re
 
 from scraper import books, http
 
-MAX_WORKERS = 8
 
-
-def fetch_shelf_page(user_id, shelf, page):
+async def fetch_shelf_page(user_id, shelf, page):
     url = (
         "https://www.goodreads.com/review/list/"
         + user_id
@@ -18,7 +16,7 @@ def fetch_shelf_page(user_id, shelf, page):
         + str(page)
         + "&print=true"
     )
-    return http.get_soup(url)
+    return await http.get_soup(url)
 
 
 def get_id(book_row):
@@ -46,7 +44,7 @@ def get_dates_read(book_row):
     return date_arr
 
 
-def _process_row(book_row, args, shelf, output_dir, page):
+async def _process_row(book_row, args, shelf, output_dir, page):
     try:
         book_id = get_id(book_row)
         file_path = output_dir / f"{book_id}.json"
@@ -62,7 +60,7 @@ def _process_row(book_row, args, shelf, output_dir, page):
                 print("✅ Updated " + book_id)
                 changed = True
         else:
-            book = books.scrape_book(book_id, args)
+            book = await books.scrape_book(book_id, args)
             book["rating"] = get_rating(book_row)
             book["dates_read"] = get_dates_read(book_row)
             book["shelves"] = [shelf]
@@ -76,36 +74,32 @@ def _process_row(book_row, args, shelf, output_dir, page):
         print(f"⚠️  Skipped book on page {page}: {e}")
 
 
-def get_shelf(args: Namespace, shelf: str):
+async def get_shelf(args: Namespace, shelf: str):
     print("Scraping '" + shelf + "' shelf...")
     user_id: str = args.user_id
     output_dir = args.output_dir / "books"
     page = 1
 
-    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        while True:
-            soup = fetch_shelf_page(user_id, shelf, page)
+    while True:
+        soup = await fetch_shelf_page(user_id, shelf, page)
 
-            no_content = soup.find("div", {"class": "greyText nocontent stacked"})
-            if no_content:
-                break
+        no_content = soup.find("div", {"class": "greyText nocontent stacked"})
+        if no_content:
+            break
 
-            books_table = soup.find("tbody", {"id": "booksBody"})
-            book_rows = books_table.find_all("tr", recursive=False)
+        books_table = soup.find("tbody", {"id": "booksBody"})
+        book_rows = books_table.find_all("tr", recursive=False)
 
-            futures = [
-                executor.submit(_process_row, row, args, shelf, output_dir, page)
-                for row in book_rows
-            ]
-            for future in futures:
-                future.result()
+        await asyncio.gather(
+            *(_process_row(row, args, shelf, output_dir, page) for row in book_rows)
+        )
 
-            page += 1
+        page += 1
 
     print()
 
 
-def get_all_shelves(args: Namespace):
+async def get_all_shelves(args: Namespace):
     if args.skip_shelves:
         return
 
@@ -124,7 +118,7 @@ def get_all_shelves(args: Namespace):
     user_id: str = args.user_id
     output_dir = args.output_dir / "books"
     url = "https://www.goodreads.com/user/show/" + user_id
-    soup = http.get_soup(url)
+    soup = await http.get_soup(url)
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -134,4 +128,4 @@ def get_all_shelves(args: Namespace):
     for link in shelf_links:
         base_url = link.attrs.get("href")
         shelf: str = re.search(r"\?shelf=([^&]+)", base_url).group(1)
-        get_shelf(args, shelf)
+        await get_shelf(args, shelf)

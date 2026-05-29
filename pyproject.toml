@@ -23,11 +23,11 @@ classifiers = [
     "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
     "Topic :: Utilities",
 ]
-dependencies = ["beautifulsoup4", "requests"]
+dependencies = ["beautifulsoup4", "aiohttp"]
 dynamic = ["version"]
 
 [project.optional-dependencies]
-dev = ["black==26.5.1", "bump-my-version", "pre-commit", "pytest"]
+dev = ["black==26.5.1", "bump-my-version", "pre-commit", "pytest", "pytest-asyncio"]
 
 [project.urls]
 Homepage = "https://github.com/YashTotale/goodreads-user-scraper"
@@ -43,6 +43,9 @@ packages = ["scraper"]
 
 [tool.setuptools.dynamic]
 version = { attr = "scraper.__version__" }
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
 
 [tool.black]
 target-version = ["py313", "py314"]
