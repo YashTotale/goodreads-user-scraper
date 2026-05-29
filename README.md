@@ -111,7 +111,7 @@ uvx goodreads-user-scraper --user_id <your id> --output_dir goodreads-data
 
 ## Authentication
 
-Shelf scraping requires authentication — Goodreads hides shelf data behind login. Public profiles, individual books, and authors scrape anonymously; a cookie also lets you scrape your own profile and shelves while keeping them private.
+Shelf scraping requires authentication — Goodreads hides shelf data behind login, and the tool gathers books and authors from your shelves. So without a cookie you get a profile only; a cookie adds shelves, books, and authors, and works on your own private profile too.
 
 ### Getting your session cookie
 
