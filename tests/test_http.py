@@ -116,6 +116,11 @@ def test_parse_retry_after_ignores_missing_or_garbage():
     assert http._parse_retry_after("banana") is None
 
 
+def test_parse_retry_after_ignores_unicode_digit():
+    # str.isdigit() accepts '²' but int() can't parse it — must not crash.
+    assert http._parse_retry_after("²") is None
+
+
 def test_backoff_is_capped_and_non_negative():
     assert 0 <= http._backoff(0) <= http.BACKOFF_BASE
     assert http._backoff(100) <= http.MAX_BACKOFF

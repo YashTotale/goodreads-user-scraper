@@ -73,7 +73,7 @@ def _is_transient_status(status: int) -> bool:
 def _parse_retry_after(header: str | None) -> float | None:
     if not header:
         return None
-    if header.isdigit():
+    if header.isdecimal():  # isdigit() accepts chars (e.g. '²') that int() rejects
         return int(header)
     try:  # Retry-After may instead be an HTTP-date
         retry_at = email.utils.parsedate_to_datetime(header)
