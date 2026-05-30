@@ -51,7 +51,7 @@ asyncio_mode = "auto"
 target-version = ["py313", "py314"]
 
 [tool.bumpversion]
-current_version = "2.2.0"
+current_version = "2.3.0"
 commit = true
 tag = true
 message = "v{new_version}"
