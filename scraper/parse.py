@@ -14,13 +14,13 @@ class ElementNotFound(Exception):
     pass
 
 
-def find_tag(node: Tag, *args: Any, **kwargs: Any) -> Tag:
-    found = node.find(*args, **kwargs)
-    if not isinstance(found, Tag):
-        raise ElementNotFound(f"no Tag matched find({args}, {kwargs})")
-    return found
-
-
 def find_tag_opt(node: Tag, *args: Any, **kwargs: Any) -> Tag | None:
     found = node.find(*args, **kwargs)
     return found if isinstance(found, Tag) else None
+
+
+def find_tag(node: Tag, *args: Any, **kwargs: Any) -> Tag:
+    found = find_tag_opt(node, *args, **kwargs)
+    if found is None:
+        raise ElementNotFound(f"no Tag matched find({args}, {kwargs})")
+    return found
