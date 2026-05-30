@@ -12,7 +12,7 @@ from scraper import __version__, http, shelves, user
 console = Console()
 
 
-async def scrape_user(args: argparse.Namespace, cookie: str | None):
+async def scrape_user(args: argparse.Namespace, cookie: str | None) -> int:
     http.init_session(cookie)
     try:
         profile = await user.get_user_info(args)
@@ -40,7 +40,7 @@ def resolve_cookie(args: argparse.Namespace) -> str | None:
     return None
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--version", action="version", version=f"%(prog)s {__version__}"

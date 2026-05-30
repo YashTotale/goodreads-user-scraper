@@ -108,10 +108,11 @@ async def get_html(url: str) -> str:
             ):
                 delay = None
             if attempt == MAX_RETRIES:
-                raise FetchError(url)
+                break
             await asyncio.sleep(
                 min(delay, MAX_BACKOFF) if delay is not None else _backoff(attempt)
             )
+    raise FetchError(url)
 
 
 async def get_soup(url: str) -> BeautifulSoup:
