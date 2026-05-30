@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img alt="Goodreads Icon" width="200" src="https://raw.githubusercontent.com/YashTotale/goodreads-user-scraper/main/static/goodreads-icon.png"></img>
+  <img alt="Goodreads Icon" width="200" src="https://raw.githubusercontent.com/YashTotale/goodreads-user-scraper/main/assets/goodreads-icon.png"></img>
   <p></p>
   <b>Goodreads User Scraper</b>
 </h1>
@@ -13,11 +13,16 @@
   <a href="https://pypi.org/project/goodreads-user-scraper/"><img src="https://img.shields.io/pepy/dt/goodreads-user-scraper?style=for-the-badge&labelColor=000000&label=Downloads&logo=pypi&logoColor=FFFFFF" alt="Downloads"></a>&nbsp;
 </p>
 
+<p align="center">
+  <img alt="CLI Demo" width="800" src="https://raw.githubusercontent.com/YashTotale/goodreads-user-scraper/main/assets/demo.gif"></img>
+</p>
+
 ## Contents <!-- omit in toc -->
 
 - [Usage](#usage)
   - [Install once, then run](#install-once-then-run)
   - [Run once without installing](#run-once-without-installing)
+- [Output](#output)
 - [Arguments](#arguments)
   - [`--user_id`](#--user_id)
   - [`--output_dir`](#--output_dir)
@@ -54,6 +59,20 @@ Best for one-off use. Downloads and runs the CLI in a temporary environment: no 
 pipx run goodreads-user-scraper --user_id <your id>
 # or: uvx goodreads-user-scraper --user_id <your id>
 ```
+
+## Output
+
+Data is written to `--output_dir` (default `goodreads-data/`):
+
+```text
+goodreads-data/
+├── user.json              # profile: name, average rating, rating/review counts
+└── books/
+    ├── 1420.Hamlet.json   # one JSON file per book
+    └── …
+```
+
+Each `books/*.json` holds the book's metadata (title, description, genres, page count, cover, ratings) plus your `shelves`, `rating`, and `dates_read`, with the author nested under `author`. Without a cookie only `user.json` is written (see [Authentication](#authentication)); `--skip_authors` omits the nested author data.
 
 ## Arguments
 
