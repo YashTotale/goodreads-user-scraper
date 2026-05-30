@@ -181,3 +181,29 @@ async def test_get_html_honors_and_caps_retry_after(fake_http):
 
     await http.get_html("https://x")
     assert sleeps == [http.MAX_BACKOFF]
+
+
+# get_soup auth detection — AuthError must be a plain Exception so it surfaces
+# cleanly through asyncio.gather instead of tearing the loop down like SystemExit.
+
+SIGN_IN_PAGE = '<div id="third_party_sign_in"></div>'
+
+
+def test_autherror_is_a_plain_exception():
+    assert issubclass(http.AuthError, Exception)
+
+
+async def test_get_soup_raises_autherror_on_auth_failure(fake_http, monkeypatch):
+    fake_http([_FakeResponse(200, body=SIGN_IN_PAGE)])
+    monkeypatch.setattr(http, "_has_cookie", True)
+
+    with pytest.raises(http.AuthError):
+        await http.get_soup("https://x")
+
+
+async def test_get_soup_skips_auth_check_without_cookie(fake_http, monkeypatch):
+    fake_http([_FakeResponse(200, body=SIGN_IN_PAGE)])
+    monkeypatch.setattr(http, "_has_cookie", False)
+
+    soup = await http.get_soup("https://x")
+    assert soup.select_one("div#third_party_sign_in") is not None
