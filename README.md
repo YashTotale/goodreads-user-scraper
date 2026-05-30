@@ -4,7 +4,7 @@
   <b>Goodreads User Scraper</b>
 </h1>
 
-<p align="center"><strong>Scrape Goodreads User Data: Profile, Book Shelves, Books, Authors</strong></p>
+<p align="center"><strong>Export Goodreads profile, shelves, books, and authors to JSON</strong></p>
 
 <p align="center">
   <!-- Version -->
@@ -66,13 +66,44 @@ Data is written to `--output_dir` (default `goodreads-data/`):
 
 ```text
 goodreads-data/
-├── user.json              # profile: name, average rating, rating/review counts
+├── user.json                          # profile: name, average rating, rating/review counts
 └── books/
-    ├── 1420.Hamlet.json   # one JSON file per book
+    ├── 4395.The_Grapes_of_Wrath.json  # one JSON file per book
     └── …
 ```
 
-Each `books/*.json` holds the book's metadata (title, description, genres, page count, cover, ratings) plus your `shelves`, `rating`, and `dates_read`, with the author nested under `author`. Without a cookie only `user.json` is written (see [Authentication](#authentication)); `--skip_authors` omits the nested author data.
+Each `books/*.json` looks like this — your `rating`, `dates_read`, and `shelves` come from your library; the author is nested:
+
+```json
+{
+  "book_id_title": "4395.The_Grapes_of_Wrath",
+  "book_id": "4395",
+  "book_title": "The Grapes of Wrath",
+  "book_description": "The Grapes of Wrath is a landmark of American literature. A portrait of the conflict between the powerful and the powerless…",
+  "book_url": "https://www.goodreads.com/book/show/4395.The_Grapes_of_Wrath",
+  "book_image": "https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1511302892i/4395.jpg",
+  "book_series_uri": null,
+  "year_first_published": "1939",
+  "num_pages": 455,
+  "genres": ["Classics", "Fiction", "Historical Fiction", "Literature", "Novels", "School", "Historical"],
+  "num_ratings": 1011464,
+  "num_reviews": 31088,
+  "average_rating": 4.03,
+  "author": {
+    "author_id_title": "585.John_Steinbeck",
+    "author_id": "585",
+    "author_name": "John Steinbeck",
+    "author_url": "https://www.goodreads.com/author/show/585.John_Steinbeck",
+    "author_image": "https://images.gr-assets.com/authors/1182118389p5/585.jpg",
+    "author_description": "John Ernst Steinbeck was an American writer. He won the 1962 Nobel Prize in Literature…"
+  },
+  "rating": 5,
+  "dates_read": ["May 03, 2020"],
+  "shelves": ["read", "2020", "2020s-favorites"]
+}
+```
+
+The two description fields are truncated here; the rest is real output. Without a cookie only `user.json` is written (see [Authentication](#authentication)); `--skip_authors` omits the nested `author`.
 
 ## Arguments
 
@@ -177,12 +208,10 @@ If no cookie is provided, shelf scraping is skipped with a warning. Pass `--skip
 
 ## Publishing
 
-Publishing is automated via GitHub Actions using PyPI [Trusted Publishing](https://docs.pypi.org/trusted-publishers/) (OIDC) — no API tokens are stored.
-
-Run the [publish script](/scripts/publish.sh) with the version bump type:
+Notes for future maintainers (me). Releases are fully automated; cutting one is a single command:
 
 ```bash
 bash scripts/publish.sh <patch|minor|major>
 ```
 
-The script bumps the version, creates a git tag, and pushes it. The [publish workflow](/.github/workflows/publish.yml) builds the distribution and uploads it to PyPI on any pushed `v*` tag.
+The script bumps the version, commits, and pushes the tag. Pushing a `v*` tag triggers the [publish workflow](/.github/workflows/publish.yml), which builds the distribution and uploads it to PyPI via [Trusted Publishing](https://docs.pypi.org/trusted-publishers/) (OIDC) so no API tokens live in the repo or CI.
