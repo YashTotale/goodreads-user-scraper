@@ -16,11 +16,12 @@ async def scrape_user(args: argparse.Namespace, cookie: str | None):
     http.init_session(cookie)
     try:
         profile = await user.get_user_info(args)
-        await shelves.get_all_shelves(args, profile)
+        fetch_failures = await shelves.get_all_shelves(args, profile)
         path = str(args.output_dir.resolve())
         line = Text("📁  Saved to ")
         line.append(path, style=f"link file://{path}")
         console.print(line)
+        return fetch_failures
     finally:
         await http.close_session()
 
@@ -90,9 +91,16 @@ def main():
     cookie = resolve_cookie(args)
 
     try:
-        asyncio.run(scrape_user(args, cookie))
+        fetch_failures = asyncio.run(scrape_user(args, cookie))
     except http.FetchError as e:
         sys.exit(f"❌ {e}")
+
+    if fetch_failures:
+        sys.exit(
+            f"❌ {fetch_failures} book(s) couldn't be fetched after retries "
+            "(Goodreads may be rate-limiting). The export is incomplete — "
+            "re-run to fetch the rest."
+        )
 
 
 if __name__ == "__main__":

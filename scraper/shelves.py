@@ -100,7 +100,8 @@ def _dedupe_books(shelf_rows):
     return books_by_id
 
 
-async def process_book(book_id, info, args, output_dir):
+async def process_book(book_id, info, args, output_dir) -> bool:
+    """Scrape or update one book. Returns True if exhausted retries skipped it."""
     try:
         file_path = output_dir / f"{book_id}.json"
         if file_path.exists():
@@ -108,7 +109,7 @@ async def process_book(book_id, info, args, output_dir):
                 book = json.load(file)
             new_shelves = [s for s in info["shelves"] if s not in book["shelves"]]
             if not new_shelves:
-                return
+                return False
             book["shelves"].extend(new_shelves)
         else:
             book = await books.scrape_book(book_id, args)
@@ -118,15 +119,15 @@ async def process_book(book_id, info, args, output_dir):
 
         with open(file_path, "w") as file:
             json.dump(book, file, indent=2)
-    except http.FetchError:
-        raise  # exhausted retries: stop the run rather than export incomplete data
+        return False
     except Exception as e:
         console.print(f"⚠️  Skipped {book_id}: {e}")
+        return isinstance(e, http.FetchError)
 
 
-async def get_all_shelves(args: Namespace, profile=None):
+async def get_all_shelves(args: Namespace, profile=None) -> int:
     if args.skip_shelves:
-        return
+        return 0
 
     if not http.has_cookie():
         print(
@@ -138,7 +139,7 @@ async def get_all_shelves(args: Namespace, profile=None):
             "   See the README for how to grab the cookie from your browser.\n"
             "   Pass --skip_shelves to suppress this message."
         )
-        return
+        return 0
 
     user_id: str = args.user_id
     output_dir = args.output_dir / "books"
@@ -170,11 +171,13 @@ async def get_all_shelves(args: Namespace, profile=None):
         task = progress.add_task("Scraping books", total=len(books_by_id))
 
         async def run(book_id, info):
-            await process_book(book_id, info, args, output_dir)
+            failed = await process_book(book_id, info, args, output_dir)
             progress.advance(task)
+            return failed
 
-        await asyncio.gather(
+        results = await asyncio.gather(
             *(run(book_id, info) for book_id, info in books_by_id.items())
         )
 
     console.print(f"📖  {len(books_by_id)} books")
+    return sum(results)

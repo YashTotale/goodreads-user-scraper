@@ -4,7 +4,7 @@ from argparse import Namespace
 
 import pytest
 
-from scraper import __main__, __version__
+from scraper import __main__, __version__, http
 
 # resolve_cookie precedence: --cookie > GOODREADS_COOKIE env > --cookie_file.
 
@@ -120,3 +120,40 @@ def test_cli_full_run_writes_user_and_books(tmp_path, monkeypatch, mock_get_soup
     book = json.loads(book_path.read_text())
     assert book["book_title"] == "Dungeon Crawler Carl"
     assert book["shelves"] == ["read"]
+
+
+def test_cli_finishes_then_fails_when_book_fetches_are_exhausted(
+    tmp_path, monkeypatch, mock_get_soup, capsys
+):
+    # Every book fetch is exhausted. The run must finish the whole shelf (reach
+    # the "Saved to" line), then exit non-zero with an "incomplete" message —
+    # not abort on the first failure.
+    mock_get_soup(
+        {
+            "user/show": "profile.html",
+            "shelf=read&page=1": "shelf_read.html",
+            "page=": "shelf_empty.html",
+        }
+    )
+
+    async def boom(book_id, args):
+        raise http.FetchError("https://www.goodreads.com/book/show/" + book_id)
+
+    monkeypatch.setattr("scraper.books.scrape_book", boom)
+
+    with pytest.raises(SystemExit) as exc:
+        _run_cli(
+            monkeypatch,
+            "--user_id",
+            "54739262",
+            "--output_dir",
+            str(tmp_path),
+            "--cookie",
+            "fake-cookie",
+            "--skip_authors",
+        )
+
+    assert exc.value.code != 0
+    assert "incomplete" in str(exc.value.code)
+    assert (tmp_path / "user.json").exists()
+    assert "Saved to" in capsys.readouterr().out  # the run reached the end

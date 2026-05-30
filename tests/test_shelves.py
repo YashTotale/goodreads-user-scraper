@@ -138,25 +138,31 @@ async def test_process_book_merges_into_existing_without_rescrape(
     assert fetched == []
 
 
-async def test_process_book_propagates_fetch_error(tmp_path, monkeypatch):
-    # Exhausted retries (rate-limiting/outage) must stop the run, not silently skip.
+async def test_process_book_reports_fetch_failure(tmp_path, monkeypatch):
+    # Exhausted retries: log the skip and return True so the run can fail at the end.
     async def boom(book_id, args):
         raise http.FetchError("https://www.goodreads.com/book/show/x")
 
     monkeypatch.setattr("scraper.books.scrape_book", boom)
     info = {"shelves": ["read"], "rating": None, "dates_read": []}
-    with pytest.raises(http.FetchError):
-        await shelves.process_book("x", info, Namespace(skip_authors=True), tmp_path)
+    failed = await shelves.process_book(
+        "x", info, Namespace(skip_authors=True), tmp_path
+    )
+    assert failed is True
+    assert not (tmp_path / "x.json").exists()
 
 
 async def test_process_book_skips_other_errors(tmp_path, monkeypatch):
-    # A malformed page (parse error) still skips just that book and continues.
+    # A malformed page (parse error) skips just that book without failing the run.
     async def boom(book_id, args):
         raise ValueError("malformed page")
 
     monkeypatch.setattr("scraper.books.scrape_book", boom)
     info = {"shelves": ["read"], "rating": None, "dates_read": []}
-    await shelves.process_book("x", info, Namespace(skip_authors=True), tmp_path)
+    failed = await shelves.process_book(
+        "x", info, Namespace(skip_authors=True), tmp_path
+    )
+    assert failed is False
     assert not (tmp_path / "x.json").exists()
 
 
