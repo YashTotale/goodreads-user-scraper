@@ -178,6 +178,10 @@ If no cookie is provided, shelf scraping is skipped with a warning. Pass `--skip
   - **Goodreads members only:** pass your cookie — any signed-in account works.
   - **Friends only:** pass your cookie, and your account must be their friend.
 
+**Hit a rate-limit or timeout?**
+
+Transient errors (timeouts, `429`, `5xx`) are retried automatically with exponential backoff. If Goodreads stays unavailable, the run exits — wait a bit and try again.
+
 ## Development
 
 1. Run the [install script](/scripts/install.sh)

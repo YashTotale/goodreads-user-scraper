@@ -89,7 +89,10 @@ def main():
 
     cookie = resolve_cookie(args)
 
-    asyncio.run(scrape_user(args, cookie))
+    try:
+        asyncio.run(scrape_user(args, cookie))
+    except http.FetchError as e:
+        sys.exit(f"❌ {e}")
 
 
 if __name__ == "__main__":
