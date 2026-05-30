@@ -40,16 +40,19 @@ def test_clean_page_is_not_auth_failure():
 
 
 class _FakeResponse:
-    def __init__(self, status, body="<html>ok</html>", headers=None):
+    def __init__(self, status, body="<html>ok</html>", headers=None, text_exc=None):
         self.status = status
         self._body = body
         self.headers = headers or {}
+        self._text_exc = text_exc
 
     def raise_for_status(self):
         if self.status >= 400:
             raise aiohttp.ClientResponseError(None, (), status=self.status)
 
     async def text(self):
+        if self._text_exc is not None:
+            raise self._text_exc
         return self._body
 
 
@@ -128,6 +131,14 @@ async def test_get_html_retries_transient_status_then_succeeds(fake_http):
 
 async def test_get_html_retries_on_timeout_then_succeeds(fake_http):
     session, sleeps = fake_http([asyncio.TimeoutError(), _FakeResponse(200)])
+
+    assert await http.get_html("https://x") == "<html>ok</html>"
+    assert session.calls == 2
+
+
+async def test_get_html_retries_on_payload_error_mid_body(fake_http):
+    broken = _FakeResponse(200, text_exc=aiohttp.ClientPayloadError("connection lost"))
+    session, sleeps = fake_http([broken, _FakeResponse(200)])
 
     assert await http.get_html("https://x") == "<html>ok</html>"
     assert session.calls == 2

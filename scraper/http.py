@@ -91,7 +91,11 @@ async def get_html(url: str) -> str:
                         response.raise_for_status()
                         return await response.text()
                     delay = _parse_retry_after(response.headers.get("Retry-After"))
-            except (asyncio.TimeoutError, aiohttp.ClientConnectionError):
+            except (
+                asyncio.TimeoutError,
+                aiohttp.ClientConnectionError,
+                aiohttp.ClientPayloadError,
+            ):
                 delay = None
             if attempt == MAX_RETRIES:
                 raise FetchError(url)
