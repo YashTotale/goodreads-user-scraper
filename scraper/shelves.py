@@ -134,7 +134,7 @@ async def process_book(
             json.dump(book, file, indent=2)
         return False
     except Exception as e:
-        console.print(f"⚠️  Skipped {book_id}: {e}")
+        console.print(f"🟡  Skipped {book_id}: {e}")
         return isinstance(e, http.FetchError)
 
 
@@ -144,7 +144,7 @@ async def get_all_shelves(args: Namespace, profile: BeautifulSoup | None = None)
 
     if not http.has_cookie():
         print(
-            "⚠️  Skipping shelves: Goodreads requires login to view shelf data.\n"
+            "🟡  Skipping shelves: Goodreads requires login to view shelf data.\n"
             "   To scrape shelves, provide your Goodreads session cookie via one of:\n"
             '     --cookie "<cookie string>"\n'
             "     GOODREADS_COOKIE=<cookie string>   (environment variable)\n"

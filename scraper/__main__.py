@@ -82,7 +82,7 @@ def main() -> None:
 
     if args.skip_user_info and args.skip_shelves:
         console.print(
-            "⚠️  Nothing to do: --skip_user_info and --skip_shelves are both set."
+            "🟡  Nothing to do: --skip_user_info and --skip_shelves are both set."
         )
         return
 
