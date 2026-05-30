@@ -92,7 +92,7 @@ def main() -> None:
 
     try:
         fetch_failures = asyncio.run(scrape_user(args, cookie))
-    except http.FetchError as e:
+    except (http.AuthError, http.FetchError) as e:
         sys.exit(f"❌ {e}")
 
     if fetch_failures:

@@ -3,7 +3,6 @@
 import asyncio
 import email.utils
 import random
-import sys
 from datetime import datetime, timezone
 
 import aiohttp
@@ -56,6 +55,14 @@ def _detect_auth_failure(soup: BeautifulSoup, body: str) -> bool:
     if "wrong with your Goodreads cookie" in body:
         return True
     return False
+
+
+class AuthError(Exception):
+    # Plain Exception, not sys.exit: a SystemExit escaping a gathered task prints a traceback.
+    def __init__(self) -> None:
+        super().__init__(
+            "Cookie appears invalid or expired. Re-grab the Cookie header value from your browser DevTools and try again."
+        )
 
 
 class FetchError(Exception):
@@ -119,7 +126,5 @@ async def get_soup(url: str) -> BeautifulSoup:
     html = await get_html(url)
     soup = BeautifulSoup(html, "html.parser")
     if _has_cookie and _detect_auth_failure(soup, html):
-        sys.exit(
-            "❌ Cookie appears invalid or expired. Re-grab the Cookie header value from your browser DevTools and try again."
-        )
+        raise AuthError()
     return soup

@@ -166,6 +166,17 @@ async def test_process_book_skips_other_errors(tmp_path, monkeypatch):
     assert not (tmp_path / "x.json").exists()
 
 
+async def test_process_book_does_not_swallow_auth_error(tmp_path, monkeypatch):
+    # A mid-run cookie expiry surfaces as AuthError; it must abort the run, not be swallowed like a parse error.
+    async def boom(book_id, args):
+        raise http.AuthError()
+
+    monkeypatch.setattr("scraper.books.scrape_book", boom)
+    info = {"shelves": ["read"], "rating": None, "dates_read": []}
+    with pytest.raises(http.AuthError):
+        await shelves.process_book("x", info, Namespace(skip_authors=True), tmp_path)
+
+
 # get_all_shelves orchestrator
 
 

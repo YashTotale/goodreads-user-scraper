@@ -122,6 +122,32 @@ def test_cli_full_run_writes_user_and_books(tmp_path, monkeypatch, mock_get_soup
     assert book["shelves"] == ["read"]
 
 
+def test_cli_invalid_cookie_exits_cleanly(tmp_path, monkeypatch, soup):
+    # An expired cookie returns the sign-in wall during shelf fetches; main() must exit with a clean ❌, not a traceback.
+    profile = soup("profile.html")
+
+    async def fake(url):
+        if "review/list" in url:
+            raise http.AuthError()
+        return profile
+
+    monkeypatch.setattr("scraper.http.get_soup", fake)
+
+    with pytest.raises(SystemExit) as exc:
+        _run_cli(
+            monkeypatch,
+            "--user_id",
+            "54739262",
+            "--output_dir",
+            str(tmp_path),
+            "--cookie",
+            "fake-cookie",
+            "--skip_authors",
+        )
+
+    assert "Cookie appears invalid or expired" in str(exc.value.code)
+
+
 def test_cli_finishes_then_fails_when_book_fetches_are_exhausted(
     tmp_path, monkeypatch, mock_get_soup, capsys
 ):
