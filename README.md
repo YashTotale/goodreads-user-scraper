@@ -178,6 +178,10 @@ If no cookie is provided, shelf scraping is skipped with a warning. Pass `--skip
   - **Goodreads members only:** pass your cookie — any signed-in account works.
   - **Friends only:** pass your cookie, and your account must be their friend.
 
+**Hit a rate-limit or timeout?**
+
+Transient errors (timeouts, `429`, `5xx`) are retried with exponential backoff. If a book still can't be fetched, the run finishes the rest, logs the skips, and exits with a non-zero status so you know the export is incomplete — re-run to fetch the missing books (already-saved books are skipped). A profile or shelf-listing failure stops the run early, since nothing else can proceed.
+
 ## Development
 
 1. Run the [install script](/scripts/install.sh)
