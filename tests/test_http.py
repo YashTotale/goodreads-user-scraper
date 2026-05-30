@@ -104,9 +104,16 @@ def test_parse_retry_after_reads_integer_seconds():
     assert http._parse_retry_after("5") == 5
 
 
-def test_parse_retry_after_ignores_missing_or_non_integer():
+def test_parse_retry_after_handles_http_date():
+    # A future HTTP-date yields a positive delay (get_html caps it at MAX_BACKOFF).
+    assert http._parse_retry_after("Wed, 21 Oct 2099 07:28:00 GMT") > 0
+    # A past date means the window already elapsed → retry now.
+    assert http._parse_retry_after("Wed, 21 Oct 2015 07:28:00 GMT") == 0
+
+
+def test_parse_retry_after_ignores_missing_or_garbage():
     assert http._parse_retry_after(None) is None
-    assert http._parse_retry_after("Wed, 21 Oct 2015 07:28:00 GMT") is None
+    assert http._parse_retry_after("banana") is None
 
 
 def test_backoff_is_capped_and_non_negative():

@@ -1,8 +1,10 @@
 """Shared async HTTP session. Optionally carries a Goodreads cookie."""
 
 import asyncio
+import email.utils
 import random
 import sys
+from datetime import datetime, timezone
 
 import aiohttp
 from bs4 import BeautifulSoup
@@ -68,10 +70,18 @@ def _is_transient_status(status: int) -> bool:
     return status == 429 or 500 <= status < 600
 
 
-def _parse_retry_after(header: str | None) -> int | None:
-    if header and header.isdigit():
+def _parse_retry_after(header: str | None) -> float | None:
+    if not header:
+        return None
+    if header.isdigit():
         return int(header)
-    return None
+    try:  # Retry-After may instead be an HTTP-date
+        retry_at = email.utils.parsedate_to_datetime(header)
+    except (TypeError, ValueError):
+        return None
+    if retry_at.tzinfo is None:
+        retry_at = retry_at.replace(tzinfo=timezone.utc)
+    return max(0.0, (retry_at - datetime.now(timezone.utc)).total_seconds())
 
 
 def _backoff(attempt: int) -> float:
