@@ -133,6 +133,8 @@ async def process_book(
         with open(file_path, "w") as file:
             json.dump(book, file, indent=2)
         return False
+    except http.AuthError:
+        raise  # a bad cookie dooms the whole run, not just this book
     except Exception as e:
         console.print(f"🟡  Skipped {book_id}: {e}")
         return isinstance(e, http.FetchError)

@@ -123,9 +123,7 @@ def test_cli_full_run_writes_user_and_books(tmp_path, monkeypatch, mock_get_soup
 
 
 def test_cli_invalid_cookie_exits_cleanly(tmp_path, monkeypatch, soup):
-    # An expired cookie makes shelf pages return Goodreads' sign-in wall, which
-    # get_soup flags as AuthError from inside the concurrent shelf fetches. main()
-    # must surface a clean ❌ message, not let it escape as a traceback.
+    # An expired cookie returns the sign-in wall during shelf fetches; main() must exit with a clean ❌, not a traceback.
     profile = soup("profile.html")
 
     async def fake(url):

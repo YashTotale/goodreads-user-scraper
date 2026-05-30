@@ -183,8 +183,7 @@ async def test_get_html_honors_and_caps_retry_after(fake_http):
     assert sleeps == [http.MAX_BACKOFF]
 
 
-# get_soup auth detection — AuthError must be a plain Exception so it surfaces
-# cleanly through asyncio.gather instead of tearing the loop down like SystemExit.
+# AuthError is a plain Exception so it surfaces through gather rather than killing the loop like SystemExit.
 
 SIGN_IN_PAGE = '<div id="third_party_sign_in"></div>'
 
