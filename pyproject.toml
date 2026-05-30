@@ -4,12 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "goodreads-user-scraper"
-description = "Scrape Goodreads User Data: Profile, Book Shelves, Books, Authors"
+description = "Export Goodreads profile, shelves, books, and authors to JSON"
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Yash Totale", email = "totaleyash@gmail.com" }]
-requires-python = ">=3.13"
+requires-python = ">=3.10"
 keywords = ["Goodreads", "books", "reading", "web scraper", "CLI"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -18,6 +18,9 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
@@ -48,7 +51,7 @@ version = { attr = "scraper.__version__" }
 asyncio_mode = "auto"
 
 [tool.black]
-target-version = ["py313", "py314"]
+target-version = ["py310"]
 
 [tool.bumpversion]
 current_version = "2.3.0"
