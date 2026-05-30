@@ -1,8 +1,11 @@
 from argparse import Namespace
 import asyncio
 import json
+from pathlib import Path
 import re
+from typing import Any
 
+from bs4 import BeautifulSoup, Tag
 from rich.console import Console
 from rich.progress import (
     BarColumn,
@@ -15,12 +18,13 @@ from rich.progress import (
 )
 
 from scraper import books, http
+from scraper.parse import find_tag
 
 PER_PAGE = 100
 console = Console()
 
 
-def make_progress():
+def make_progress() -> Progress:
     return Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
@@ -33,7 +37,7 @@ def make_progress():
     )
 
 
-async def fetch_shelf_page(user_id, shelf, page):
+async def fetch_shelf_page(user_id: str, shelf: str, page: int) -> BeautifulSoup:
     url = (
         f"https://www.goodreads.com/review/list/{user_id}"
         f"?shelf={shelf}&page={page}&per_page={PER_PAGE}&print=true"
@@ -41,23 +45,28 @@ async def fetch_shelf_page(user_id, shelf, page):
     return await http.get_soup(url)
 
 
-def get_id(book_row):
-    cell = book_row.find("td", {"class": "field title"})
-    title_href = cell.find("div", {"class": "value"}).find("a")
-    return title_href.attrs.get("href").split("/")[-1]
+def get_id(book_row: Tag) -> str:
+    cell = find_tag(book_row, "td", {"class": "field title"})
+    title_href = find_tag(find_tag(cell, "div", {"class": "value"}), "a")
+    href = title_href.get("href")
+    assert isinstance(href, str)
+    return href.split("/")[-1]
 
 
-def get_rating(book_row):
-    stars = book_row.find("td", {"class": "field rating"}).find(
-        "div", {"class": "stars"}
+def get_rating(book_row: Tag) -> int | None:
+    cell = find_tag(book_row, "td", {"class": "field rating"})
+    stars = cell.find("div", {"class": "stars"})
+    if not isinstance(stars, Tag):
+        return None
+    value = stars.get("data-rating")  # bs4 types this str | list[str] | None
+    return (int(value) or None) if isinstance(value, str) else None
+
+
+def get_dates_read(book_row: Tag) -> list[str]:
+    cell = find_tag(book_row, "td", {"class": "field date_read"})
+    dates = find_tag(cell, "div", {"class": "value"}).find_all(
+        "div", {"class": "date_row"}
     )
-    rating = int(stars.get("data-rating", 0)) if stars else 0
-    return rating or None
-
-
-def get_dates_read(book_row):
-    cell = book_row.find("td", {"class": "field date_read"})
-    dates = cell.find("div", {"class": "value"}).find_all("div", {"class": "date_row"})
     date_arr = []
     for date in dates:
         date_text = date.text.strip().split("\n")[0].strip()
@@ -66,21 +75,23 @@ def get_dates_read(book_row):
     return date_arr
 
 
-async def collect_shelf_rows(user_id, shelf):
-    rows = []
+async def collect_shelf_rows(user_id: str, shelf: str) -> list[Tag]:
+    rows: list[Tag] = []
     page = 1
     while True:
         soup = await fetch_shelf_page(user_id, shelf, page)
         if soup.find("div", {"class": "greyText nocontent stacked"}):
             break
-        body = soup.find("tbody", {"id": "booksBody"})
+        body = find_tag(soup, "tbody", {"id": "booksBody"})
         rows.extend(body.find_all("tr", recursive=False))
         page += 1
     return rows
 
 
-def _dedupe_books(shelf_rows):
-    books_by_id = {}
+def _dedupe_books(
+    shelf_rows: list[tuple[str, list[Tag]]],
+) -> dict[str, dict[str, Any]]:
+    books_by_id: dict[str, dict[str, Any]] = {}
     for shelf, page_rows in shelf_rows:
         for row in page_rows:
             try:
@@ -100,7 +111,9 @@ def _dedupe_books(shelf_rows):
     return books_by_id
 
 
-async def process_book(book_id, info, args, output_dir) -> bool:
+async def process_book(
+    book_id: str, info: dict[str, Any], args: Namespace, output_dir: Path
+) -> bool:
     """Scrape or update one book. Returns True if exhausted retries skipped it."""
     try:
         file_path = output_dir / f"{book_id}.json"
@@ -125,7 +138,7 @@ async def process_book(book_id, info, args, output_dir) -> bool:
         return isinstance(e, http.FetchError)
 
 
-async def get_all_shelves(args: Namespace, profile=None) -> int:
+async def get_all_shelves(args: Namespace, profile: BeautifulSoup | None = None) -> int:
     if args.skip_shelves:
         return 0
 
@@ -148,16 +161,19 @@ async def get_all_shelves(args: Namespace, profile=None) -> int:
         profile = await http.get_soup(url)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    shelf_links = profile.find("div", {"id": "shelves"}).find_all("a")
-    shelf_names = [
-        re.search(r"\?shelf=([^&]+)", link.attrs.get("href")).group(1)
-        for link in shelf_links
-    ]
+    shelf_links = find_tag(profile, "div", {"id": "shelves"}).find_all("a")
+    shelf_names = []
+    for link in shelf_links:
+        href = link.get("href")
+        assert isinstance(href, str)
+        match = re.search(r"\?shelf=([^&]+)", href)
+        assert match is not None
+        shelf_names.append(match.group(1))
 
     with make_progress() as progress:
         task = progress.add_task("Finding shelves", total=len(shelf_names))
 
-        async def collect(shelf):
+        async def collect(shelf: str) -> tuple[str, list[Tag]]:
             rows = await collect_shelf_rows(user_id, shelf)
             progress.advance(task)
             return shelf, rows
@@ -170,7 +186,7 @@ async def get_all_shelves(args: Namespace, profile=None) -> int:
     with make_progress() as progress:
         task = progress.add_task("Scraping books", total=len(books_by_id))
 
-        async def run(book_id, info):
+        async def run(book_id: str, info: dict[str, Any]) -> bool:
             failed = await process_book(book_id, info, args, output_dir)
             progress.advance(task)
             return failed

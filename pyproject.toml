@@ -30,7 +30,7 @@ dependencies = ["beautifulsoup4", "aiohttp", "rich"]
 dynamic = ["version"]
 
 [project.optional-dependencies]
-dev = ["black==26.5.1", "bump-my-version", "pre-commit", "pytest", "pytest-asyncio"]
+dev = ["black==26.5.1", "bump-my-version", "mypy", "pre-commit", "pytest", "pytest-asyncio"]
 
 [project.urls]
 Homepage = "https://github.com/YashTotale/goodreads-user-scraper#readme"
@@ -49,6 +49,11 @@ version = { attr = "scraper.__version__" }
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+
+[tool.mypy]
+python_version = "3.10"
+files = ["scraper"]
+disallow_untyped_defs = true
 
 [tool.black]
 target-version = ["py310"]

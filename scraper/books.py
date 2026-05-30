@@ -1,122 +1,109 @@
 import re
 from argparse import Namespace
+from typing import Any
 
 from bs4 import BeautifulSoup
 
 from scraper import author, http
+from scraper.parse import find_tag, find_tag_opt
 
 
-def get_author_id(soup: BeautifulSoup):
-    author = soup.find("div", {"class": "ContributorLinksList"}).find("a")
-    author_url = author.attrs.get("href")
-    return author_url.split("/")[-1]
+def get_author_id(soup: BeautifulSoup) -> str:
+    container = find_tag(soup, "div", {"class": "ContributorLinksList"})
+    href = find_tag(container, "a").get("href")
+    assert isinstance(href, str)
+    return href.split("/")[-1]
 
 
-def get_genres(soup: BeautifulSoup):
-    genres = []
-    genres_container = soup.find("div", {"data-testid": "genresList"})
-
-    if genres_container:
-        genre_links = genres_container.find("ul").find("span").find_all("a")
-
-        for link in genre_links:
-            genre = link.find("span").text
-            genres.append(genre)
-        return genres
-
-    return None
+def get_genres(soup: BeautifulSoup) -> list[str] | None:
+    genres_container = find_tag_opt(soup, "div", {"data-testid": "genresList"})
+    if genres_container is None:
+        return None
+    genre_links = find_tag(find_tag(genres_container, "ul"), "span").find_all("a")
+    return [find_tag(link, "span").text for link in genre_links]
 
 
-def get_average_rating(soup: BeautifulSoup):
-    average_rating = soup.find(
-        "div", {"class": "RatingStatistics__rating"}
+def get_average_rating(soup: BeautifulSoup) -> float | None:
+    average_rating = find_tag(
+        soup, "div", {"class": "RatingStatistics__rating"}
     ).text.strip()
-
-    if average_rating:
-        return float(average_rating)
-    return None
+    return float(average_rating) if average_rating else None
 
 
-def get_num_reviews(soup: BeautifulSoup):
-    num_reviews = soup.find("span", {"data-testid": "reviewsCount"})
-
-    if num_reviews:
-        num_reviews = re.search(
-            r"(\d{1,3}(,\d{3})*(\.\d+)?)", num_reviews.text.strip()
-        ).group(1)
-        return int(num_reviews.replace(",", ""))
-    return None
+def get_num_reviews(soup: BeautifulSoup) -> int | None:
+    num_reviews = find_tag_opt(soup, "span", {"data-testid": "reviewsCount"})
+    if num_reviews is None:
+        return None
+    match = re.search(r"(\d{1,3}(,\d{3})*(\.\d+)?)", num_reviews.text.strip())
+    assert match is not None
+    return int(match.group(1).replace(",", ""))
 
 
-def get_num_ratings(soup: BeautifulSoup):
-    num_ratings = soup.find("span", {"data-testid": "ratingsCount"})
-
-    if num_ratings:
-        num_ratings = re.search(
-            r"(\d{1,3}(,\d{3})*(\.\d+)?)", num_ratings.text.strip()
-        ).group(1)
-        return int(num_ratings.replace(",", ""))
-    return None
+def get_num_ratings(soup: BeautifulSoup) -> int | None:
+    num_ratings = find_tag_opt(soup, "span", {"data-testid": "ratingsCount"})
+    if num_ratings is None:
+        return None
+    match = re.search(r"(\d{1,3}(,\d{3})*(\.\d+)?)", num_ratings.text.strip())
+    assert match is not None
+    return int(match.group(1).replace(",", ""))
 
 
-def get_num_pages(soup: BeautifulSoup):
-    num_pages_container = soup.find("p", {"data-testid": "pagesFormat"})
-    num_pages = re.search(
-        r"(\d{1,3}(,\d{3})*(\.\d+)?)", num_pages_container.text.strip()
+def get_num_pages(soup: BeautifulSoup) -> int | None:
+    container = find_tag_opt(soup, "p", {"data-testid": "pagesFormat"})
+    if container is None:
+        return None
+    match = re.search(r"(\d{1,3}(,\d{3})*(\.\d+)?)", container.text.strip())
+    return int(match.group(1).replace(",", "")) if match else None
+
+
+def get_year_first_published(soup: BeautifulSoup) -> str | None:
+    info = find_tag_opt(soup, "p", {"data-testid": "publicationInfo"})
+    if info is None:
+        return None
+    text = info.string
+    assert text is not None
+    match = re.search(r"([0-9]{3,4})", text)
+    assert match is not None
+    return match.group(1)
+
+
+def get_series_uri(soup: BeautifulSoup) -> str | None:
+    title_section = find_tag(soup, "h1", {"data-testid": "bookTitle"}).parent
+    assert title_section is not None
+    series_container = find_tag_opt(title_section, "h3")
+    if series_container is None:
+        return None
+    href = find_tag(series_container, "a").get("href")
+    return href if isinstance(href, str) else None
+
+
+def get_image(soup: BeautifulSoup) -> str | None:
+    src = find_tag(soup, "img", {"class": "ResponsiveImage"}).get("src")
+    return src if isinstance(src, str) else None
+
+
+def get_description(soup: BeautifulSoup) -> str | None:
+    description = find_tag_opt(
+        find_tag(soup, "div", {"data-testid": "description"}), "span"
     )
-
-    if num_pages:
-        num_pages = num_pages.group(1)
-        return int(num_pages.replace(",", ""))
-    return None
+    return description.text if description else None
 
 
-def get_year_first_published(soup: BeautifulSoup):
-    year_first_published = soup.find("p", {"data-testid": "publicationInfo"})
-    if year_first_published:
-        year_first_published = year_first_published.string
-        return re.search(r"([0-9]{3,4})", year_first_published).group(1)
-    else:
-        return None
+def get_title(soup: BeautifulSoup) -> str:
+    return " ".join(find_tag(soup, "h1", {"data-testid": "bookTitle"}).text.split())
 
 
-def get_series_uri(soup: BeautifulSoup):
-    title_section = soup.find("h1", {"data-testid": "bookTitle"}).parent
-    series_container = title_section.find("h3")
-
-    if series_container:
-        return series_container.find("a").get("href")
-    else:
-        return None
+def get_id(book_id: str) -> str:
+    match = re.compile("([^.-]+)").search(book_id)
+    assert match is not None
+    return match.group()
 
 
-def get_image(soup: BeautifulSoup):
-    return soup.find("img", {"class": "ResponsiveImage"}).attrs.get("src")
-
-
-def get_description(soup: BeautifulSoup):
-    description_div = soup.find("div", {"data-testid": "description"}).find("span")
-
-    if description_div:
-        return description_div.text
-    else:
-        return None
-
-
-def get_title(soup: BeautifulSoup):
-    return " ".join(soup.find("h1", {"data-testid": "bookTitle"}).text.split())
-
-
-def get_id(book_id: str):
-    pattern = re.compile("([^.-]+)")
-    return pattern.search(book_id).group()
-
-
-async def scrape_book(book_id: str, args: Namespace):
+async def scrape_book(book_id: str, args: Namespace) -> dict[str, Any]:
     url = "https://www.goodreads.com/book/show/" + book_id
     soup = await http.get_soup(url)
 
-    book = {
+    book: dict[str, Any] = {
         "book_id_title": book_id,
         "book_id": get_id(book_id),
         "book_title": get_title(soup),
