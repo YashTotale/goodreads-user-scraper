@@ -26,3 +26,5 @@ jobs:
         env:
           GOODREADS_COOKIE: ${{ secrets.GOODREADS_COOKIE }}
       - run: bash scripts/test.sh
+        env:
+          GOODREADS_USER_ID: ${{ vars.GOODREADS_USER_ID }}

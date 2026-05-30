@@ -204,7 +204,7 @@ If no cookie is provided, shelf scraping is skipped with a warning. Pass `--skip
    bash scripts/test.sh
    ```
 
-   This scrapes the real Goodreads site end to end. To include shelf scraping, save your Goodreads cookie to a gitignored `.goodreads-cookie` file in the repo root — the test script picks it up automatically. CI runs this monthly (see [`integration.yml`](/.github/workflows/integration.yml)) to catch Goodreads markup changes.
+   This scrapes the real Goodreads site end to end against a sample profile; set `GOODREADS_USER_ID` to scrape your own instead. To include shelf scraping, save your Goodreads cookie to a gitignored `.goodreads-cookie` file in the repo root — the test script picks it up automatically. CI runs this monthly (see [`integration.yml`](/.github/workflows/integration.yml)) to catch Goodreads markup changes.
 
 ## Publishing
 
