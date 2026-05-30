@@ -1,9 +1,10 @@
 import json
 from argparse import Namespace
 
+import pytest
 from bs4 import BeautifulSoup
 
-from scraper import shelves
+from scraper import http, shelves
 
 READ_BOOK_ID = "211721806-dungeon-crawler-carl"
 
@@ -135,6 +136,28 @@ async def test_process_book_merges_into_existing_without_rescrape(
     assert data["shelves"] == ["read", "favorites"]
     assert data["book_title"] == "SEEDED"  # not re-scraped
     assert fetched == []
+
+
+async def test_process_book_propagates_fetch_error(tmp_path, monkeypatch):
+    # Exhausted retries (rate-limiting/outage) must stop the run, not silently skip.
+    async def boom(book_id, args):
+        raise http.FetchError("https://www.goodreads.com/book/show/x")
+
+    monkeypatch.setattr("scraper.books.scrape_book", boom)
+    info = {"shelves": ["read"], "rating": None, "dates_read": []}
+    with pytest.raises(http.FetchError):
+        await shelves.process_book("x", info, Namespace(skip_authors=True), tmp_path)
+
+
+async def test_process_book_skips_other_errors(tmp_path, monkeypatch):
+    # A malformed page (parse error) still skips just that book and continues.
+    async def boom(book_id, args):
+        raise ValueError("malformed page")
+
+    monkeypatch.setattr("scraper.books.scrape_book", boom)
+    info = {"shelves": ["read"], "rating": None, "dates_read": []}
+    await shelves.process_book("x", info, Namespace(skip_authors=True), tmp_path)
+    assert not (tmp_path / "x.json").exists()
 
 
 # get_all_shelves orchestrator

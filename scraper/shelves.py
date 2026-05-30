@@ -118,6 +118,8 @@ async def process_book(book_id, info, args, output_dir):
 
         with open(file_path, "w") as file:
             json.dump(book, file, indent=2)
+    except http.FetchError:
+        raise  # exhausted retries: stop the run rather than export incomplete data
     except Exception as e:
         console.print(f"⚠️  Skipped {book_id}: {e}")
 
