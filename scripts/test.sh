@@ -9,6 +9,7 @@ if [ -f .venv/bin/activate ]; then
 fi
 
 PYTHON="${PYTHON:-python3}"
+USER_ID="${GOODREADS_USER_ID:-54739262}"
 
 if ! command -v "$PYTHON" >/dev/null 2>&1; then
   echo "Error: $PYTHON not found."
@@ -17,7 +18,7 @@ if ! command -v "$PYTHON" >/dev/null 2>&1; then
 fi
 
 if [ -f .goodreads-cookie ]; then
-  "$PYTHON" -m scraper --user_id 54739262 --output_dir goodreads-data --cookie_file .goodreads-cookie
+  "$PYTHON" -m scraper --user_id "$USER_ID" --output_dir goodreads-data --cookie_file .goodreads-cookie
 else
-  "$PYTHON" -m scraper --user_id 54739262 --output_dir goodreads-data
+  "$PYTHON" -m scraper --user_id "$USER_ID" --output_dir goodreads-data
 fi
