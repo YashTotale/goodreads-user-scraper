@@ -59,7 +59,7 @@ disallow_untyped_defs = true
 target-version = ["py310"]
 
 [tool.bumpversion]
-current_version = "2.4.1"
+current_version = "2.4.2"
 commit = true
 tag = true
 message = "v{new_version}"
