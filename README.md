@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img alt="CLI Demo" width="800" src="https://raw.githubusercontent.com/YashTotale/goodreads-user-scraper/main/assets/demo.gif"></img>
+  <img alt="CLI Demo" width="800" src="https://raw.githubusercontent.com/YashTotale/goodreads-user-scraper/main/assets/demo-full.gif"></img>
 </p>
 
 ## Contents <!-- omit in toc -->
@@ -24,19 +24,10 @@
   - [Run once without installing](#run-once-without-installing)
 - [Output](#output)
 - [Arguments](#arguments)
-  - [`--user_id`](#--user_id)
-  - [`--output_dir`](#--output_dir)
-  - [`--cookie`](#--cookie)
-  - [`--cookie_file`](#--cookie_file)
-  - [`--skip_user_info`](#--skip_user_info)
-  - [`--skip_shelves`](#--skip_shelves)
-  - [`--skip_authors`](#--skip_authors)
 - [Authentication](#authentication)
   - [Getting your session cookie](#getting-your-session-cookie)
   - [Passing the cookie](#passing-the-cookie)
 - [Troubleshooting](#troubleshooting)
-- [Development](#development)
-- [Publishing](#publishing)
 
 ## Usage
 
@@ -105,45 +96,28 @@ Each `books/*.json` looks like this — your `rating`, `dates_read`, and `shelve
 
 The two description fields are truncated here; the rest is real output. Without a cookie only `user.json` is written (see [Authentication](#authentication)); `--skip_authors` omits the nested `author`.
 
+<details>
+<summary><strong>What the CLI looks like in other states</strong></summary>
+
+| Scenario | Demo |
+| --- | --- |
+| Nothing to do | <img alt="Nothing-to-do demo" width="560" src="https://raw.githubusercontent.com/YashTotale/goodreads-user-scraper/main/assets/demo-nothing-to-do.gif"> |
+| No cookie | <img alt="No-cookie demo" width="560" src="https://raw.githubusercontent.com/YashTotale/goodreads-user-scraper/main/assets/demo-no-cookie.gif"> |
+| Invalid cookie | <img alt="Invalid-cookie demo" width="560" src="https://raw.githubusercontent.com/YashTotale/goodreads-user-scraper/main/assets/demo-invalid-cookie.gif"> |
+
+</details>
+
 ## Arguments
 
-### `--user_id`
-
-- **Description**: The user whose data should be scraped. Find your user id using [these directions](https://help.goodreads.com/s/article/Where-can-I-find-my-user-ID).
-- **Required**: Yes
-
-### `--output_dir`
-
-- **Description**: The directory where all scraped data will be output.
-- **Required**: No
-- **Default**: `goodreads-data`
-
-### `--cookie`
-
-- **Description**: Your Goodreads session cookie (the full `Cookie:` request-header value). Required for shelf scraping — see [Authentication](#authentication).
-- **Required**: No
-- **Default**: None
-
-### `--cookie_file`
-
-- **Description**: Path to a text file containing your Goodreads session cookie.
-- **Required**: No
-- **Default**: None
-
-### `--skip_user_info`
-
-- **Description**: If passed, skip scraping user information.
-- **Required**: No
-
-### `--skip_shelves`
-
-- **Description**: If passed, skip scraping shelves. Books (and their authors) are scraped from your shelves, so this skips them too.
-- **Required**: No
-
-### `--skip_authors`
-
-- **Description**: If passed, skip scraping authors.
-- **Required**: No
+| Flag | Description | Default |
+| --- | --- | --- |
+| `--user_id` | **Required.** The user whose data to scrape ([find your user id](https://help.goodreads.com/s/article/Where-can-I-find-my-user-ID)). | — |
+| `--output_dir` | Directory where scraped data is written. | `goodreads-data` |
+| `--cookie` | Your Goodreads session cookie (the full `Cookie:` request-header value); required for shelf scraping — see [Authentication](#authentication). | None |
+| `--cookie_file` | Path to a text file containing your session cookie. | None |
+| `--skip_user_info` | Skip scraping user information. | — |
+| `--skip_shelves` | Skip scraping shelves. Books (and their authors) are scraped from your shelves, so this skips them too. | — |
+| `--skip_authors` | Skip scraping authors. | — |
 
 ## Authentication
 
@@ -170,7 +144,8 @@ If no cookie is provided, shelf scraping is skipped with a warning. Pass `--skip
 
 ## Troubleshooting
 
-**Missing profile or shelf data?**
+<details>
+<summary><strong>Missing profile or shelf data?</strong></summary>
 
 - **Your own account:** pass your session cookie (see [Authentication](#authentication)) — your profile, shelves, and books all scrape, even on a private profile.
 - **Another user's account:** what you can scrape depends on their profile privacy setting. Shelves always require your cookie (see [Authentication](#authentication)).
@@ -178,11 +153,21 @@ If no cookie is provided, shelf scraping is skipped with a warning. Pass `--skip
   - **Goodreads members only:** pass your cookie — any signed-in account works.
   - **Friends only:** pass your cookie, and your account must be their friend.
 
-**Hit a rate-limit or timeout?**
+</details>
+
+<details>
+<summary><strong>Hit a rate-limit or timeout?</strong></summary>
 
 Transient errors (timeouts, `429`, `5xx`) are retried with exponential backoff. If a book still can't be fetched, the run finishes the rest, logs the skips, and exits with a non-zero status so you know the export is incomplete — re-run to fetch the missing books (already-saved books are skipped). A profile or shelf-listing failure stops the run early, since nothing else can proceed.
 
-## Development
+</details>
+
+---
+
+<details>
+<summary><strong>Notes for future maintainers (me)</strong></summary>
+
+### Development <!-- omit in toc -->
 
 1. Run the [install script](/scripts/install.sh)
 
@@ -210,12 +195,22 @@ Transient errors (timeouts, `429`, `5xx`) are retried with exponential backoff. 
 
    This scrapes the real Goodreads site end to end against a sample profile; set `GOODREADS_USER_ID` to scrape your own instead. To include shelf scraping, save your Goodreads cookie to a gitignored `.goodreads-cookie` file in the repo root — the test script picks it up automatically. CI runs this monthly (see [`integration.yml`](/.github/workflows/integration.yml)) to catch Goodreads markup changes.
 
-## Publishing
+5. Optionally regenerate the demo GIFs
 
-Notes for future maintainers (me). Releases are fully automated; cutting one is a single command:
+   ```bash
+   bash scripts/render_demos.sh
+   ```
+
+   Re-renders the `assets/demo*.gif` catalog with [vhs](https://github.com/charmbracelet/vhs). The live demos hit Goodreads (space out re-renders to avoid rate limiting); the full-scrape hero also needs a `.goodreads-cookie` file.
+
+### Publishing <!-- omit in toc -->
+
+Releases are fully automated; cutting one is a single command:
 
 ```bash
 bash scripts/publish.sh <patch|minor|major>
 ```
 
 The script bumps the version, commits, and pushes the tag. Pushing a `v*` tag triggers the [publish workflow](/.github/workflows/publish.yml), which builds the distribution and uploads it to PyPI via [Trusted Publishing](https://docs.pypi.org/trusted-publishers/) (OIDC) so no API tokens live in the repo or CI.
+
+</details>
