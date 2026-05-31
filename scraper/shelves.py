@@ -147,12 +147,12 @@ async def get_all_shelves(args: Namespace, profile: BeautifulSoup | None = None)
     if not http.has_cookie():
         print(
             "🟡  Skipping shelves: Goodreads requires login to view shelf data.\n"
-            "   To scrape shelves, provide your Goodreads session cookie via one of:\n"
-            '     --cookie "<cookie string>"\n'
-            "     GOODREADS_COOKIE=<cookie string>   (environment variable)\n"
-            "     --cookie_file <path-to-file>\n"
-            "   See the README for how to grab the cookie from your browser.\n"
-            "   Pass --skip_shelves to suppress this message."
+            "    To scrape shelves, provide your Goodreads session cookie via one of:\n"
+            '      --cookie "<cookie string>"\n'
+            "      GOODREADS_COOKIE=<cookie string>   (environment variable)\n"
+            "      --cookie_file <path-to-file>\n"
+            "    See the README for how to grab the cookie from your browser.\n"
+            "    Pass --skip_shelves to suppress this message."
         )
         return 0
 
