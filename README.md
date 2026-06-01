@@ -28,6 +28,7 @@
   - [Getting your session cookie](#getting-your-session-cookie)
   - [Passing the cookie](#passing-the-cookie)
 - [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
 
 ## Usage
 
@@ -162,55 +163,8 @@ Transient errors (timeouts, `429`, `5xx`) are retried with exponential backoff. 
 
 </details>
 
----
+## Contributing
 
-<details>
-<summary><strong>Notes for future maintainers (me)</strong></summary>
+Contributions are welcome! See [CONTRIBUTING.md](https://github.com/YashTotale/goodreads-user-scraper?tab=contributing-ov-file#readme) for local development setup. To report a bug or request a feature, open an [issue](https://github.com/YashTotale/goodreads-user-scraper/issues/new/choose); for usage questions, start a thread in [Discussions](https://github.com/YashTotale/goodreads-user-scraper/discussions/categories/q-a).
 
-### Development <!-- omit in toc -->
-
-1. Run the [install script](/scripts/install.sh)
-
-   ```bash
-   bash scripts/install.sh
-   ```
-
-2. Make changes
-
-3. Run the unit tests
-
-   ```bash
-   pytest
-   ```
-
-   These run against saved Goodreads HTML in `tests/fixtures/` — no network, no cookie. This is the CI gate on every push and PR.
-
-   When Goodreads changes its markup, refresh the fixtures with [`scripts/capture_fixtures.py`](/scripts/capture_fixtures.py) (reads your cookie from `.goodreads-cookie` if present), then re-run `pytest`.
-
-4. Optionally run the live smoke test
-
-   ```bash
-   bash scripts/test.sh
-   ```
-
-   This scrapes the real Goodreads site end to end against a sample profile; set `GOODREADS_USER_ID` to scrape your own instead. To include shelf scraping, save your Goodreads cookie to a gitignored `.goodreads-cookie` file in the repo root — the test script picks it up automatically. CI runs this monthly (see [`integration.yml`](/.github/workflows/integration.yml)) to catch Goodreads markup changes.
-
-5. Optionally regenerate the demo GIFs
-
-   ```bash
-   bash scripts/render_demos.sh
-   ```
-
-   Re-renders the `assets/demo*.gif` catalog with [vhs](https://github.com/charmbracelet/vhs). The live demos hit Goodreads (space out re-renders to avoid rate limiting); the full-scrape hero also needs a `.goodreads-cookie` file.
-
-### Publishing <!-- omit in toc -->
-
-Releases are fully automated; cutting one is a single command:
-
-```bash
-bash scripts/publish.sh <patch|minor|major>
-```
-
-The script bumps the version, commits, and pushes the tag. Pushing a `v*` tag triggers the [publish workflow](/.github/workflows/publish.yml), which builds the distribution and uploads it to PyPI via [Trusted Publishing](https://docs.pypi.org/trusted-publishers/) (OIDC) so no API tokens live in the repo or CI.
-
-</details>
+Licensed under [MIT](https://github.com/YashTotale/goodreads-user-scraper?tab=MIT-1-ov-file#readme).

@@ -1,1 +1,5 @@
 blank_issues_enabled: true
+contact_links:
+  - name: Questions & Discussions
+    url: https://github.com/YashTotale/goodreads-user-scraper/discussions/categories/q-a
+    about: Ask usage questions and discuss the project here.
