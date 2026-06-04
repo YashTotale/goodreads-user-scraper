@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img alt="Goodreads Icon" width="200" src="https://raw.githubusercontent.com/YashTotale/goodreads-user-scraper/main/assets/goodreads-icon.png"></img>
+  <img alt="Goodreads Icon" width="200" src="https://raw.githubusercontent.com/YashTotale/goodreads-user-scraper/main/assets/goodreads.svg"></img>
   <p></p>
   <b>Goodreads User Scraper</b>
 </h1>
@@ -8,9 +8,9 @@
 
 <p align="center">
   <!-- Version -->
-  <a href="https://pypi.org/project/goodreads-user-scraper/"><img src="https://img.shields.io/pypi/v/goodreads-user-scraper?style=for-the-badge&labelColor=000000&label=Version" alt="Version"></a>&nbsp;
+  <a href="https://pypi.org/project/goodreads-user-scraper/"><img src="https://img.shields.io/pypi/v/goodreads-user-scraper?style=for-the-badge&labelColor=000000&label=Version&logo=pypi&logoColor=FFFFFF" alt="Version"></a>&nbsp;
   <!-- Downloads -->
-  <a href="https://pypi.org/project/goodreads-user-scraper/"><img src="https://img.shields.io/pepy/dt/goodreads-user-scraper?style=for-the-badge&labelColor=000000&label=Downloads&logo=pypi&logoColor=FFFFFF" alt="Downloads"></a>&nbsp;
+  <a href="https://pypi.org/project/goodreads-user-scraper/"><img src="https://img.shields.io/pepy/dt/goodreads-user-scraper?style=for-the-badge&labelColor=000000&label=Downloads&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTUgMjBoMTR2LTJINXYyek0xMiA0djguMTdsMy41OS0zLjU4TDE3IDEwbC01IDUtNS01IDEuNDEtMS40MUwxMSAxMi4xN1Y0aDJ6Ii8%2BPC9zdmc%2B" alt="Downloads"></a>&nbsp;
 </p>
 
 <p align="center">
