@@ -27,7 +27,7 @@
 - [Authentication](#authentication)
   - [Getting your session cookie](#getting-your-session-cookie)
   - [Passing the cookie](#passing-the-cookie)
-- [Troubleshooting](#troubleshooting)
+- [FAQ](#faq)
 - [Contributing](#contributing)
 
 ## Usage
@@ -143,7 +143,7 @@ Cookies typically last several weeks. If you see a "Cookie appears invalid or ex
 
 If no cookie is provided, shelf scraping is skipped with a warning. Pass `--skip_shelves` to suppress the warning.
 
-## Troubleshooting
+## FAQ
 
 <details>
 <summary><strong>Missing profile or shelf data?</strong></summary>
@@ -160,6 +160,21 @@ If no cookie is provided, shelf scraping is skipped with a warning. Pass `--skip
 <summary><strong>Hit a rate-limit or timeout?</strong></summary>
 
 Transient errors (timeouts, `429`, `5xx`) are retried with exponential backoff. If a book still can't be fetched, the run finishes the rest, logs the skips, and exits with a non-zero status so you know the export is incomplete — re-run to fetch the missing books (already-saved books are skipped). A profile or shelf-listing failure stops the run early, since nothing else can proceed.
+
+</details>
+
+<details>
+<summary><strong>Can I export to a SQLite database (or another format)?</strong></summary>
+
+The scraper outputs JSON, which converts cleanly to other formats. For SQLite, [`sqlite-utils`](https://sqlite-utils.datasette.io/) infers the schema and handles indexes and upserts. Combine the per-book files and load them into a table keyed on `book_id`:
+
+```bash
+goodreads-user-scraper --user_id <id> --cookie "<cookie>"
+jq -s . goodreads-data/books/*.json | sqlite-utils upsert books.db books - --pk book_id
+sqlite-utils create-index books.db books book_title
+```
+
+Re-running the scraper fetches only new books and `upsert` updates the table in place, so the pipeline is safe to run on a schedule. Use `sqlite-utils --extract` to normalize the nested author and shelves into their own tables. See [#38](https://github.com/YashTotale/goodreads-user-scraper/issues/38) for context.
 
 </details>
 
