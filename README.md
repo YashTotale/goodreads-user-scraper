@@ -171,10 +171,10 @@ The scraper outputs JSON, which converts cleanly to other formats. For SQLite, [
 ```bash
 goodreads-user-scraper --user_id <id> --cookie "<cookie>"
 jq -s . goodreads-data/books/*.json | sqlite-utils upsert books.db books - --pk book_id
-sqlite-utils create-index books.db books book_title
+sqlite-utils create-index --if-not-exists books.db books book_title
 ```
 
-Re-running the scraper fetches only new books and `upsert` updates the table in place, so the pipeline is safe to run on a schedule. Use `sqlite-utils --extract` to normalize the nested author and shelves into their own tables. See [#38](https://github.com/YashTotale/goodreads-user-scraper/issues/38) for context.
+Re-running the scraper fetches only new books and `upsert` updates the table in place, so the pipeline is safe to rerun on a schedule. The nested `author` and `shelves` come through as JSON columns — query them with SQLite's JSON functions (`json_extract`, `json_each`). See [#38](https://github.com/YashTotale/goodreads-user-scraper/issues/38) for context.
 
 </details>
 
