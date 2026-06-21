@@ -37,6 +37,23 @@ def test_get_dates_read_when_missing(soup):
     assert shelves.get_dates_read(rows(soup, "shelf_to_read.html")[0]) == []
 
 
+# get_exclusive_shelves
+
+
+def test_get_exclusive_shelves(soup):
+    assert shelves.get_exclusive_shelves(soup("shelf_read.html")) == {
+        "to-read",
+        "currently-reading",
+        "read",
+        "did-not-finish",
+    }
+
+
+def test_get_exclusive_shelves_absent_returns_empty(soup):
+    # The profile page carries no ShelfChooser, so there is no exclusive list.
+    assert shelves.get_exclusive_shelves(soup("profile.html")) == set()
+
+
 # fetch_shelf_page
 
 
@@ -66,8 +83,9 @@ async def test_collect_shelf_rows_paginates_until_empty(mock_get_soup):
             "&page=3&": "shelf_empty.html",
         }
     )
-    collected = await shelves.collect_shelf_rows("54739262", "read")
-    assert len(collected) == 40  # 30 (page 1) + 10 (page 2), then page 3 terminates
+    rows, exclusive = await shelves.collect_shelf_rows("54739262", "read")
+    assert len(rows) == 40  # 30 (page 1) + 10 (page 2), then page 3 terminates
+    assert exclusive == {"to-read", "currently-reading", "read", "did-not-finish"}
 
 
 # _dedupe_books
@@ -75,18 +93,25 @@ async def test_collect_shelf_rows_paginates_until_empty(mock_get_soup):
 
 def test_dedupe_merges_book_across_shelves(soup):
     row = rows(soup, "shelf_read.html")[0]
-    books = shelves._dedupe_books([("read", [row]), ("favorites", [row])])
+    books = shelves._dedupe_books([("read", [row]), ("favorites", [row])], {"read"})
     assert list(books) == [READ_BOOK_ID]
     entry = books[READ_BOOK_ID]
     assert entry["shelves"] == ["read", "favorites"]
+    assert entry["exclusive_shelf"] == "read"  # the one exclusive shelf it sits on
     assert entry["rating"] == 4
     assert entry["dates_read"] == ["May 19, 2026"]
+
+
+def test_dedupe_without_exclusive_shelf(soup):
+    row = rows(soup, "shelf_read.html")[0]
+    books = shelves._dedupe_books([("favorites", [row])], {"read", "to-read"})
+    assert books[READ_BOOK_ID]["exclusive_shelf"] is None
 
 
 def test_dedupe_skips_unparseable_row(soup):
     good = rows(soup, "shelf_read.html")[0]
     bad = BeautifulSoup("<tr></tr>", "html.parser").find("tr")
-    books = shelves._dedupe_books([("read", [good, bad])])
+    books = shelves._dedupe_books([("read", [good, bad])], {"read"})
     assert list(books) == [READ_BOOK_ID]  # malformed row dropped
 
 
@@ -98,7 +123,7 @@ def test_dedupe_skips_row_missing_rating_cell(soup):
         '<a href="/book/show/123-x">x</a></div></td></tr>',
         "html.parser",
     ).find("tr")
-    books = shelves._dedupe_books([("read", [good, partial])])
+    books = shelves._dedupe_books([("read", [good, partial])], {"read"})
     assert list(books) == [READ_BOOK_ID]
 
 
@@ -107,13 +132,19 @@ def test_dedupe_skips_row_missing_rating_cell(soup):
 
 async def test_process_book_scrapes_new(tmp_path, mock_get_soup):
     mock_get_soup({"book/show": "book.html"})
-    info = {"shelves": ["read"], "rating": 4, "dates_read": ["May 19, 2026"]}
+    info = {
+        "shelves": ["read"],
+        "exclusive_shelf": "read",
+        "rating": 4,
+        "dates_read": ["May 19, 2026"],
+    }
     await shelves.process_book(
         READ_BOOK_ID, info, Namespace(skip_authors=True), tmp_path
     )
 
     data = json.loads((tmp_path / f"{READ_BOOK_ID}.json").read_text())
     assert data["shelves"] == ["read"]
+    assert data["exclusive_shelf"] == "read"
     assert data["rating"] == 4
     assert data["dates_read"] == ["May 19, 2026"]
     assert data["book_title"] == "Dungeon Crawler Carl"
@@ -127,13 +158,19 @@ async def test_process_book_merges_into_existing_without_rescrape(
     fetched = []
     monkeypatch.setattr("scraper.http.get_soup", lambda url: fetched.append(url))
 
-    info = {"shelves": ["read", "favorites"], "rating": 4, "dates_read": []}
+    info = {
+        "shelves": ["read", "favorites"],
+        "exclusive_shelf": "read",
+        "rating": 4,
+        "dates_read": [],
+    }
     await shelves.process_book(
         READ_BOOK_ID, info, Namespace(skip_authors=True), tmp_path
     )
 
     data = json.loads(book_file.read_text())
     assert data["shelves"] == ["read", "favorites"]
+    assert "exclusive_shelf" not in data  # frozen, not backfilled
     assert data["book_title"] == "SEEDED"  # not re-scraped
     assert fetched == []
 
@@ -239,3 +276,4 @@ async def test_get_all_shelves_dedupes_and_scrapes(
     assert {p.stem for p in books_dir.glob("*.json")} == expected
     read_book = json.loads((books_dir / f"{READ_BOOK_ID}.json").read_text())
     assert "read" in read_book["shelves"]
+    assert read_book["exclusive_shelf"] == "read"

@@ -64,7 +64,7 @@ goodreads-data/
     └── …
 ```
 
-Each `books/*.json` looks like this — your `rating`, `dates_read`, and `shelves` come from your library; the author is nested:
+Each `books/*.json` looks like this — your `rating`, `dates_read`, `shelves`, and `exclusive_shelf` (the one status shelf, e.g. `read`, or `null`) come from your library; the author is nested:
 
 ```json
 {
@@ -91,7 +91,8 @@ Each `books/*.json` looks like this — your `rating`, `dates_read`, and `shelve
   },
   "rating": 5,
   "dates_read": ["May 03, 2020"],
-  "shelves": ["read", "2020", "2020s-favorites"]
+  "shelves": ["read", "2020", "2020s-favorites"],
+  "exclusive_shelf": "read"
 }
 ```
 
