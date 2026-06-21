@@ -23,6 +23,18 @@ from scraper.parse import find_tag
 PER_PAGE = 100
 console = Console()
 
+# Shelf print pages init a ShelfChooser JS object naming the exclusive shelves.
+_EXCLUSIVE_RE = re.compile(r"exclusive:\s*\[([^\]]*)\]")
+
+
+def get_exclusive_shelves(soup: BeautifulSoup) -> set[str]:
+    """The user's exclusive shelves (read, to-read, …), from any shelf page."""
+    for script in soup.find_all("script"):
+        match = _EXCLUSIVE_RE.search(script.get_text())
+        if match:
+            return set(re.findall(r'"([^"]+)"', match.group(1)))
+    return set()
+
 
 def make_progress() -> Progress:
     return Progress(
@@ -75,21 +87,25 @@ def get_dates_read(book_row: Tag) -> list[str]:
     return date_arr
 
 
-async def collect_shelf_rows(user_id: str, shelf: str) -> list[Tag]:
+async def collect_shelf_rows(user_id: str, shelf: str) -> tuple[list[Tag], set[str]]:
     rows: list[Tag] = []
+    exclusive: set[str] = set()
     page = 1
     while True:
         soup = await fetch_shelf_page(user_id, shelf, page)
+        if page == 1:
+            exclusive = get_exclusive_shelves(soup)
         if soup.find("div", {"class": "greyText nocontent stacked"}):
             break
         body = find_tag(soup, "tbody", {"id": "booksBody"})
         rows.extend(body.find_all("tr", recursive=False))
         page += 1
-    return rows
+    return rows, exclusive
 
 
 def _dedupe_books(
     shelf_rows: list[tuple[str, list[Tag]]],
+    exclusive_shelves: set[str],
 ) -> dict[str, dict[str, Any]]:
     books_by_id: dict[str, dict[str, Any]] = {}
     for shelf, page_rows in shelf_rows:
@@ -100,6 +116,7 @@ def _dedupe_books(
                 if entry is None:
                     entry = {
                         "shelves": [],
+                        "exclusive_shelf": None,
                         "rating": get_rating(row),
                         "dates_read": get_dates_read(row),
                     }
@@ -108,6 +125,8 @@ def _dedupe_books(
                 continue  # skip a malformed row
             if shelf not in entry["shelves"]:
                 entry["shelves"].append(shelf)
+            if shelf in exclusive_shelves:
+                entry["exclusive_shelf"] = shelf  # at most one per book
     return books_by_id
 
 
@@ -129,6 +148,7 @@ async def process_book(
             book["rating"] = info["rating"]
             book["dates_read"] = info["dates_read"]
             book["shelves"] = info["shelves"]
+            book["exclusive_shelf"] = info["exclusive_shelf"]
 
         with open(file_path, "w") as file:
             json.dump(book, file, indent=2)
@@ -175,15 +195,17 @@ async def get_all_shelves(args: Namespace, profile: BeautifulSoup | None = None)
     with make_progress() as progress:
         task = progress.add_task("Finding shelves", total=len(shelf_names))
 
-        async def collect(shelf: str) -> tuple[str, list[Tag]]:
-            rows = await collect_shelf_rows(user_id, shelf)
+        async def collect(shelf: str) -> tuple[str, list[Tag], set[str]]:
+            rows, exclusive = await collect_shelf_rows(user_id, shelf)
             progress.advance(task)
-            return shelf, rows
+            return shelf, rows, exclusive
 
         per_shelf = await asyncio.gather(*(collect(shelf) for shelf in shelf_names))
     console.print(f"📚  {len(shelf_names)} shelves")
 
-    books_by_id = _dedupe_books(per_shelf)
+    # The exclusive set is user-global, so any shelf's copy will do.
+    exclusive_shelves = next((ex for *_, ex in per_shelf if ex), set())
+    books_by_id = _dedupe_books([(s, r) for s, r, _ in per_shelf], exclusive_shelves)
 
     with make_progress() as progress:
         task = progress.add_task("Scraping books", total=len(books_by_id))
