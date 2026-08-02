@@ -188,7 +188,7 @@ async def get_all_shelves(args: Namespace, profile: BeautifulSoup | None = None)
     for link in shelf_links:
         href = link.get("href")
         assert isinstance(href, str)
-        match = re.search(r"\?shelf=([^&]+)", href)
+        match = re.search(r"[?&](?:shelf|tag)=([^&]+)", href)
         assert match is not None
         shelf_names.append(match.group(1))
 
