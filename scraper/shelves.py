@@ -21,6 +21,7 @@ from scraper import books, http
 from scraper.parse import find_tag
 
 PER_PAGE = 100
+BOOK_CONCURRENCY = 4
 console = Console()
 
 # Shelf print pages init a ShelfChooser JS object naming the exclusive shelves.
@@ -207,12 +208,19 @@ async def get_all_shelves(args: Namespace, profile: BeautifulSoup | None = None)
     exclusive_shelves = next((ex for *_, ex in per_shelf if ex), set())
     books_by_id = _dedupe_books([(s, r) for s, r, _ in per_shelf], exclusive_shelves)
 
-    results = []
     with make_progress() as progress:
         task = progress.add_task("Scraping books", total=len(books_by_id))
-        for book_id, info in books_by_id.items():
-            results.append(await process_book(book_id, info, args, output_dir))
+        semaphore = asyncio.Semaphore(BOOK_CONCURRENCY)
+
+        async def run(book_id: str, info: dict[str, Any]) -> bool:
+            async with semaphore:
+                failed = await process_book(book_id, info, args, output_dir)
             progress.advance(task)
+            return failed
+
+        results = await asyncio.gather(
+            *(run(book_id, info) for book_id, info in books_by_id.items())
+        )
 
     console.print(f"📖  {len(books_by_id)} books")
     return sum(results)
