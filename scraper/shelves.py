@@ -21,6 +21,7 @@ from scraper import books, http
 from scraper.parse import find_tag
 
 PER_PAGE = 100
+BOOK_CONCURRENCY = 4
 console = Console()
 
 # Shelf print pages init a ShelfChooser JS object naming the exclusive shelves.
@@ -71,7 +72,7 @@ def get_rating(book_row: Tag) -> int | None:
     if not isinstance(stars, Tag):
         return None
     value = stars.get("data-rating")  # bs4 types this str | list[str] | None
-    return (int(value) or None) if isinstance(value, str) else None
+    return (int(float(value)) or None) if isinstance(value, str) else None
 
 
 def get_dates_read(book_row: Tag) -> list[str]:
@@ -209,9 +210,11 @@ async def get_all_shelves(args: Namespace, profile: BeautifulSoup | None = None)
 
     with make_progress() as progress:
         task = progress.add_task("Scraping books", total=len(books_by_id))
+        semaphore = asyncio.Semaphore(BOOK_CONCURRENCY)
 
         async def run(book_id: str, info: dict[str, Any]) -> bool:
-            failed = await process_book(book_id, info, args, output_dir)
+            async with semaphore:
+                failed = await process_book(book_id, info, args, output_dir)
             progress.advance(task)
             return failed
 

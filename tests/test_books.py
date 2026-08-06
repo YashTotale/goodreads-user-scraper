@@ -95,6 +95,19 @@ async def test_scrape_book_skips_author_fetch(mock_get_soup):
     assert book["num_pages"] == 450
 
 
+async def test_scrape_book_uses_localized_url(monkeypatch, soup):
+    urls = []
+
+    async def get_soup(url):
+        urls.append(url)
+        return soup("book.html")
+
+    monkeypatch.setattr("scraper.http.get_soup", get_soup)
+    await books.scrape_book(BOOK_ID, Namespace(skip_authors=True))
+
+    assert urls == [f"https://www.goodreads.com/en/book/show/{BOOK_ID}"]
+
+
 async def test_scrape_book_fetches_author(mock_get_soup):
     mock_get_soup({"book/show": "book.html", "author/show": "author.html"})
     book = await books.scrape_book(BOOK_ID, Namespace(skip_authors=False))

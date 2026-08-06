@@ -28,7 +28,7 @@ FIXTURES_DIR = Path(__file__).resolve().parent.parent / "tests" / "fixtures"
 
 
 def book_url(book_id):
-    return "https://www.goodreads.com/book/show/" + book_id
+    return "https://www.goodreads.com/en/book/show/" + book_id
 
 
 def author_url(author_id):

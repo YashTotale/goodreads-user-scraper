@@ -100,7 +100,7 @@ def get_id(book_id: str) -> str:
 
 
 async def scrape_book(book_id: str, args: Namespace) -> dict[str, Any]:
-    url = "https://www.goodreads.com/book/show/" + book_id
+    url = "https://www.goodreads.com/en/book/show/" + book_id
     soup = await http.get_soup(url)
 
     book: dict[str, Any] = {
