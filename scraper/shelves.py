@@ -71,7 +71,7 @@ def get_rating(book_row: Tag) -> int | None:
     if not isinstance(stars, Tag):
         return None
     value = stars.get("data-rating")  # bs4 types this str | list[str] | None
-    return (int(value) or None) if isinstance(value, str) else None
+    return (int(float(value)) or None) if isinstance(value, str) else None
 
 
 def get_dates_read(book_row: Tag) -> list[str]:
@@ -207,17 +207,12 @@ async def get_all_shelves(args: Namespace, profile: BeautifulSoup | None = None)
     exclusive_shelves = next((ex for *_, ex in per_shelf if ex), set())
     books_by_id = _dedupe_books([(s, r) for s, r, _ in per_shelf], exclusive_shelves)
 
+    results = []
     with make_progress() as progress:
         task = progress.add_task("Scraping books", total=len(books_by_id))
-
-        async def run(book_id: str, info: dict[str, Any]) -> bool:
-            failed = await process_book(book_id, info, args, output_dir)
+        for book_id, info in books_by_id.items():
+            results.append(await process_book(book_id, info, args, output_dir))
             progress.advance(task)
-            return failed
-
-        results = await asyncio.gather(
-            *(run(book_id, info) for book_id, info in books_by_id.items())
-        )
 
     console.print(f"📖  {len(books_by_id)} books")
     return sum(results)

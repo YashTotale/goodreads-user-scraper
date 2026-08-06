@@ -25,6 +25,12 @@ def test_get_rating_when_rated(soup):
     assert shelves.get_rating(rows(soup, "shelf_read.html")[0]) == 4
 
 
+def test_get_rating_when_decimal(soup):
+    row = rows(soup, "shelf_read.html")[0]
+    row.find("div", {"class": "stars"})["data-rating"] = "4.0"
+    assert shelves.get_rating(row) == 4
+
+
 def test_get_rating_when_unrated(soup):
     assert shelves.get_rating(rows(soup, "shelf_to_read.html")[0]) is None
 
